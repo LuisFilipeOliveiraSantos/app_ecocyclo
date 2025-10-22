@@ -5,6 +5,7 @@ import 'package:ecocyclo_app/theme/app_colors.dart';
 import '../../widgets/login_textfield.dart';
 import '../../widgets/cadastro/cadastro_back_button.dart';
 import '../../widgets/cadastro/cadastro_next_button.dart';
+import '../../widgets/cadastro/company_type_selector.dart';
 
 class CompanyScreen extends StatefulWidget {
   const CompanyScreen({super.key});
@@ -17,11 +18,14 @@ class _CompanyScreenState extends State<CompanyScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _companyNameController = TextEditingController();
   final TextEditingController _registrationController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  String? _selectedCompanyType;
 
   @override
   void dispose() {
     _companyNameController.dispose();
     _registrationController.dispose();
+    _phoneController.dispose(); 
     super.dispose();
   }
 
@@ -85,6 +89,27 @@ class _CompanyScreenState extends State<CompanyScreen> {
                               return null;
                             },
                           ),
+                          const SizedBox(height: 32),
+                          LoginTextField(
+                            hintText: "Telefone (99) 99999-9999", 
+                            iconPath: 'assets/icons/phone.svg',
+                            controller: _phoneController,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) return 'Telefone obrigatório';
+                              final phoneRegex = RegExp(r'^\(\d{2}\) \d{4,5}-\d{4}$');
+                              if (!phoneRegex.hasMatch(value)) return 'Telefone inválido';
+                              return null;
+                            },                 
+                            ),
+                            const SizedBox(height: 35),
+                            CompanyTypeSelector(
+                              initialValue: _selectedCompanyType,
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedCompanyType = value;
+                                });
+                              },
+                             )
                         ],
                       ),
                     ),
@@ -100,9 +125,58 @@ class _CompanyScreenState extends State<CompanyScreen> {
                       text: "Próximo",
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
+                          if (_selectedCompanyType == null) {
+                            final snackBar = SnackBar(
+                            behavior: SnackBarBehavior.floating,
+                            backgroundColor: Colors.transparent,
+                            elevation: 0,
+                            duration: const Duration(seconds: 2),
+                            content: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [AppColors.gradientLeft, AppColors.gradientRight],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 26),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 9),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.error_outline, color: Colors.white, size: 28),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Selecione o tipo de empresa',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                            return;
+                          }
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => const LocationScreen(),
+                              builder: (context) => LocationScreen(
+                                companyName: _companyNameController.text,
+                                cnpj: _registrationController.text,
+                                phone: _phoneController.text,
+                                companyType: _selectedCompanyType!,
+                              ),
                             ),
                           );
                         }

@@ -17,6 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _passwordVisible = false;
+  bool _isLoading = false; // 👈 novo controle de carregamento
 
   static const List<Color> _gradientColors = [
     AppColors.gradientLeft,
@@ -30,33 +31,43 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-    Future<void> _handleLogin() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        // Chama o serviço de login
-        final token = await AuthService.login(
-          _emailController.text,
-          _passwordController.text,
-        );
+  Future<void> _handleLogin() async {
+    if (_isLoading) return; // 👈 evita duplo clique
+    if (!_formKey.currentState!.validate()) return;
 
-        // Login bem-sucedido
-        print("Login bem-sucedido! Token: $token");
+    setState(() => _isLoading = true); // Ativa loading
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login realizado com sucesso!')),
-        );
+    try {
+      await AuthService.login(
+        _emailController.text,
+        _passwordController.text,
+      );
 
-        // Navega para a tela Home
-        Navigator.pushReplacementNamed(context, '/home');
+      // ✅ Mensagem de sucesso
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Login realizado com sucesso!'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
 
-      } catch (e) {
-        // Mostra erro caso o login falhe
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro no login: $e')),
-        );
-      }
+      // ✅ Navega para a tela Home
+      Navigator.pushReplacementNamed(context, '/home');
+    } catch (e) {
+      // ❌ Mensagem de erro
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erro ao realizar login. Verifique suas credenciais.'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false); // Desativa loading
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -143,17 +154,20 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 30),
 
-                  // Botão "Logar" usando AuthService
-                  LoginButton(
-                    text: 'Logar',
-                    onPressed: _handleLogin,
-                    textStyle: GoogleFonts.poppins(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w400,
-                    ),
-                    width: 350,
-                    gradientColors: _gradientColors,
-                  ),
+                  // Botão "Logar"
+                  _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : LoginButton(
+                          text: 'Logar',
+                          onPressed: _handleLogin,
+                          textStyle: GoogleFonts.poppins(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w400,
+                          ),
+                          width: 350,
+                          gradientColors: _gradientColors,
+                        ),
+
                   const SizedBox(height: 15),
 
                   // Texto "Esqueceu a senha?"

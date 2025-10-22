@@ -5,8 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   // Função de login
-  static Future<String> login(String email, String password) async {
-    final url = Uri.parse("${ApiConfig.baseUrl}/api/v1/login/access-token");
+  static Future<void> login(String email, String password) async {
+    final url = Uri.parse("${ApiConfig.baseUrl}/api/v1/company/login/access-token");
 
     final response = await http.post(
       url,
@@ -22,13 +22,15 @@ class AuthService {
       final data = jsonDecode(response.body);
       final token = data['access_token'];
 
-      // Salva o token localmente para futuras requisições
+      // Salva o token localmente
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('access_token', token);
 
-      return token;
+      // Não retorna mensagem do backend
+      return;
     } else {
-      throw Exception('Erro no login: ${response.statusCode} - ${response.body}');
+      // Exibe apenas uma mensagem genérica
+      throw Exception('Falha ao realizar login. Verifique suas credenciais.');
     }
   }
 
