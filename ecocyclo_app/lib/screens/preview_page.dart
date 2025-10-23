@@ -1,32 +1,65 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import '../widgets/agendar/botao_voltar_padrao.dart';
+import '../services/analyze_service.dart'; 
 
 class PreviewPage extends StatelessWidget {
   final String imagePath;
 
   const PreviewPage({super.key, required this.imagePath});
 
-  Future<void> salvarImagemLocal(BuildContext context) async {
+
+
+  /// 👉 Nova função: envia a imagem ao backend e mostra o resultado
+  Future<void> enviarImagemParaAnalise(BuildContext context) async {
     try {
-      final directory = await getApplicationDocumentsDirectory();
-      final folderPath = '${directory.path}/descarte_fotos';
-      await Directory(folderPath).create(recursive: true);
-
-      final fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      final newFile = File('$folderPath/$fileName.jpg');
-
-      await File(imagePath).copy(newFile.path);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('📁 Foto salva em: ${newFile.path}')),
+      // Mostra indicador de carregamento
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
       );
 
-      Navigator.pop(context); // volta pra câmera
+      // Lê os bytes da imagem
+      final bytes = await File(imagePath).readAsBytes();
+      final fileName = imagePath.split('/').last;
+
+      // Chama o service
+      final result = await AnalyzeService.analyzeImage(bytes, fileName);
+
+      // Fecha o indicador de carregamento
+      Navigator.of(context).pop();
+
+      // Mostra a resposta em um pop-up
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("Resultado da Análise"),
+          content: Text(result),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao salvar foto: $e')),
+      // Fecha o indicador de carregamento se ainda estiver aberto
+      Navigator.of(context, rootNavigator: true).pop();
+
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("Erro"),
+          content: Text("Falha ao enviar imagem: $e"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Fechar"),
+            ),
+          ],
+        ),
       );
     }
   }
@@ -81,7 +114,8 @@ class PreviewPage extends StatelessWidget {
                   ),
                 ),
                 ElevatedButton.icon(
-                  onPressed: () => salvarImagemLocal(context),
+                  // 🔹 Troca o botão para enviar pro backend
+                  onPressed: () => enviarImagemParaAnalise(context),
                   icon: const Icon(Icons.send),
                   label: const Text('Enviar'),
                   style: ElevatedButton.styleFrom(
