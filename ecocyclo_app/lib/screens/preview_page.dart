@@ -2,6 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../widgets/agendar/botao_voltar_padrao.dart';
 import '../services/analyze_service.dart'; 
+import '../../theme/app_colors.dart';
+import '../../widgets/VisaoComp/Enviar_button.dart';
+
 
 class PreviewPage extends StatelessWidget {
   final String imagePath;
@@ -9,65 +12,137 @@ class PreviewPage extends StatelessWidget {
   const PreviewPage({super.key, required this.imagePath});
 
 
+Future<void> enviarImagemParaAnalise(BuildContext context) async {
+  try {
+    // Loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator(color: AppColors.gradientRight)),
+    );
 
-  /// 👉 Nova função: envia a imagem ao backend e mostra o resultado
-  Future<void> enviarImagemParaAnalise(BuildContext context) async {
-    try {
-      // Mostra indicador de carregamento
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
-      );
+    final bytes = await File(imagePath).readAsBytes();
+    final fileName = imagePath.split('/').last;
+    final items = await AnalyzeService.analyzeImage(bytes, fileName);
 
-      // Lê os bytes da imagem
-      final bytes = await File(imagePath).readAsBytes();
-      final fileName = imagePath.split('/').last;
+    Navigator.of(context).pop(); // fecha loading
 
-      // Chama o service
-      final result = await AnalyzeService.analyzeImage(bytes, fileName);
+  showDialog(
+  context: context,
+  builder: (_) => AlertDialog(
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    contentPadding: const EdgeInsets.all(16),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ...items.map(
+          (item) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              item[0].toUpperCase() + item.substring(1),
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+        ),
 
-      // Fecha o indicador de carregamento
-      Navigator.of(context).pop();
+        const SizedBox(height: 16),
+        Text(
+          'Quantidade total: ${items.length}',
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
+          ),
+        ),
 
-      // Mostra a resposta em um pop-up
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text("Resultado da Análise"),
-          content: Text(result),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("OK"),
+        const SizedBox(height: 24),
+
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      AppColors.gradientRedLeft,
+                      AppColors.gradientRedRight,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text(
+                    "Cancelar",
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      AppColors.gradientLeft,
+                      AppColors.gradientRight,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text(
+                    "Confirmar",
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
-      );
-    } catch (e) {
-      // Fecha o indicador de carregamento se ainda estiver aberto
-      Navigator.of(context, rootNavigator: true).pop();
-
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text("Erro"),
-          content: Text("Falha ao enviar imagem: $e"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Fechar"),
-            ),
-          ],
-        ),
-      );
-    }
+      ],
+    ),
+  ),
+);
+  } catch (e) {
+    Navigator.of(context, rootNavigator: true).pop();
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Erro"),
+        content: Text("Falha ao enviar imagem:\n$e"),
+      ),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Color(0xFF000000),
       body: Stack(
         children: [
           Center(
@@ -77,13 +152,23 @@ class PreviewPage extends StatelessWidget {
             top: 0,
             left: 0,
             right: 0,
-            child: SafeArea(
+            child: Container(
+              height: 90,
+              padding: const EdgeInsets.only(top: 40, left: 12, right: 12),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppColors.primary, AppColors.secondary],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
+              ),
               child: Row(
                 children: [
                   BotaoVoltarPadrao(onPressed: () => Navigator.pop(context)),
                   const Expanded(
                     child: Text(
-                      'Pré-visualização',
+                      "Pré-visualização",
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,
@@ -92,7 +177,10 @@ class PreviewPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 48),
+                  const Opacity(
+                    opacity: 0,
+                    child: Icon(Icons.arrow_back_ios_new_rounded),
+                  ),
                 ],
               ),
             ),
@@ -104,24 +192,10 @@ class PreviewPage extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                ElevatedButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.cancel),
-                  label: const Text('Cancelar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                ),
-                ElevatedButton.icon(
-                  // 🔹 Troca o botão para enviar pro backend
+                EnviarButton(
+                  text: 'Analizar imagem',
+                  icon: Icons.image_outlined,
                   onPressed: () => enviarImagemParaAnalise(context),
-                  icon: const Icon(Icons.send),
-                  label: const Text('Enviar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
                 ),
               ],
             ),

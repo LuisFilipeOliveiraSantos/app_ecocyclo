@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:camerawesome/camerawesome_plugin.dart';
 import '../widgets/agendar/botao_voltar_padrao.dart';
 import 'preview_page.dart';
+import '../../theme/app_colors.dart';
 
 class CameraPage extends StatelessWidget {
   const CameraPage({super.key});
@@ -42,7 +43,7 @@ class CameraPage extends StatelessWidget {
               padding: const EdgeInsets.only(top: 40, left: 12, right: 12),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF00796B), Color(0xFF0288D1)],
+                  colors: [AppColors.primary, AppColors.secondary],
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                 ),
