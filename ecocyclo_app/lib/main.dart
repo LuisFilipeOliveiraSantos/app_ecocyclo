@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
       title: 'Ecocyclo',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      initialRoute: '/informativa1',
+      initialRoute: '/empresas_mock_page',
       routes: {
         '/login': (context) => const LoginPage(),
         '/informativa1': (context) => const Informativa1Screen(),

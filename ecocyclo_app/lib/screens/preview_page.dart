@@ -23,11 +23,12 @@ Future<void> enviarImagemParaAnalise(BuildContext context) async {
 
     final bytes = await File(imagePath).readAsBytes();
     final fileName = imagePath.split('/').last;
-    final items = await AnalyzeService.analyzeImage(bytes, fileName);
+    final Map<String, int> items = await AnalyzeService.analyzeImage(bytes, fileName);
 
-    Navigator.of(context).pop(); // fecha loading
 
-  showDialog(
+  Navigator.of(context).pop(); // fecha loading
+
+showDialog(
   context: context,
   builder: (_) => AlertDialog(
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -35,27 +36,31 @@ Future<void> enviarImagemParaAnalise(BuildContext context) async {
     content: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        ...items.map(
-          (item) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              item[0].toUpperCase() + item.substring(1),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
-              ),
+        ...items.entries.map(
+          (entry) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  entry.key[0].toUpperCase() + entry.key.substring(1),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "Quantidade: ${entry.value}",
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ),
-
-        const SizedBox(height: 16),
-        Text(
-          'Quantidade total: ${items.length}',
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
           ),
         ),
 
@@ -67,10 +72,7 @@ Future<void> enviarImagemParaAnalise(BuildContext context) async {
               child: Container(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [
-                      AppColors.gradientRedLeft,
-                      AppColors.gradientRedRight,
-                    ],
+                    colors: [AppColors.gradientRedLeft, AppColors.gradientRedRight],
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -79,15 +81,10 @@ Future<void> enviarImagemParaAnalise(BuildContext context) async {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  child: const Text(
-                    "Cancelar",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
+                  child: const Text("Cancelar", style: TextStyle(color: Colors.white, fontSize: 16)),
                 ),
               ),
             ),
@@ -96,10 +93,7 @@ Future<void> enviarImagemParaAnalise(BuildContext context) async {
               child: Container(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [
-                      AppColors.gradientLeft,
-                      AppColors.gradientRight,
-                    ],
+                    colors: [AppColors.gradientLeft, AppColors.gradientRight],
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -108,15 +102,10 @@ Future<void> enviarImagemParaAnalise(BuildContext context) async {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  child: const Text(
-                    "Confirmar",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
+                  child: const Text("Confirmar", style: TextStyle(color: Colors.white, fontSize: 16)),
                 ),
               ),
             ),
