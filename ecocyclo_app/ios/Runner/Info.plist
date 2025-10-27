@@ -45,5 +45,16 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- 📸 Permissões adicionadas -->
+	<key>NSCameraUsageDescription</key>
+	<string>Este aplicativo precisa acessar a câmera para tirar fotos e gravar vídeos.</string>
+
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Este aplicativo precisa acessar o microfone para gravar vídeos.</string>
+
+	<!-- (Opcional) Caso queira salvar na galeria futuramente -->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Este aplicativo precisa salvar fotos na sua galeria.</string>
 </dict>
 </plist>

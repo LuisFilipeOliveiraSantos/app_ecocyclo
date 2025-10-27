@@ -20,6 +20,7 @@ class CredentialsScreen extends StatefulWidget {
     required this.neighborhood,
     required this.complement,
     required this.reference,
+    required this.companyName,
   });
 
   final String cnpj;
@@ -33,6 +34,7 @@ class CredentialsScreen extends StatefulWidget {
   final String neighborhood;
   final String complement;
   final String reference;
+  final String companyName;
 
   @override
   State<CredentialsScreen> createState() => _CredentialsScreenState();
@@ -64,6 +66,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
 
     try {
       await RegisterService.register(
+        name: widget.companyName,
         email: _emailController.text,
         password: _passwordController.text,
         cnpj: widget.cnpj,

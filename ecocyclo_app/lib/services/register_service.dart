@@ -6,7 +6,7 @@ class RegisterService {
   static Future<void> register({
     required String email,
     required String password,
-    //required String name,
+    required String name,
     required String cnpj,
     required String telefone,
     required String company_type,
@@ -28,7 +28,7 @@ class RegisterService {
         'email': email,
         'password': password,
         'confirm_password': password,
-        // 'name': name,
+        'nome': name,
         'cnpj': cnpj,
         'telefone': telefone,
         'company_type': company_type,

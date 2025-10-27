@@ -7,14 +7,14 @@ import '../../widgets/cadastro/cadastro_back_button.dart';
 import '../../widgets/cadastro/cadastro_next_button.dart';
 
 class LocationScreen extends StatefulWidget {
-  // final String companyName;
+  final String companyName;
   final String cnpj;
   final String phone;
   final String companyType;
 
   const LocationScreen({
     super.key,
-    // required this.companyName,
+    required this.companyName,
     required this.cnpj,
     required this.phone,
     required this.companyType,
@@ -201,7 +201,7 @@ class _LocationScreenState extends State<LocationScreen> {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => CredentialsScreen(
-                                // companyName: widget.companyName,
+                                companyName: widget.companyName,
                                 cnpj: widget.cnpj,
                                 phone: widget.phone,
                                 companyType: widget.companyType,

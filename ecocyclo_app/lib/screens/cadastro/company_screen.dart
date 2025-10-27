@@ -172,7 +172,7 @@ class _CompanyScreenState extends State<CompanyScreen> {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => LocationScreen(
-                                // companyName: _companyNameController.text,
+                                companyName: _companyNameController.text,
                                 cnpj: _registrationController.text,
                                 phone: _phoneController.text,
                                 companyType: _selectedCompanyType!,
