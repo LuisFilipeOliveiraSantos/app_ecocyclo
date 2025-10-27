@@ -12,7 +12,7 @@ class AuthService {
       url,
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: {
-        'grant_type': 'password', // importante para OAuth2
+        'grant_type': 'password',
         'username': email,
         'password': password,
       },
@@ -22,14 +22,9 @@ class AuthService {
       final data = jsonDecode(response.body);
       final token = data['access_token'];
 
-      // Salva o token localmente
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('access_token', token);
-
-      // Não retorna mensagem do backend
-      return;
     } else {
-      // Exibe apenas uma mensagem genérica
       throw Exception('Falha ao realizar login. Verifique suas credenciais.');
     }
   }
@@ -40,7 +35,27 @@ class AuthService {
     return prefs.getString('access_token');
   }
 
-  // Função de logout (remove token)
+  // Buscar informações da empresa logada
+  static Future<String> getCompanyName() async {
+    final token = await getToken();
+    if (token == null) return "Empresa";
+
+    final url = Uri.parse("${ApiConfig.baseUrl}/api/v1/company/me");
+
+    final response = await http.get(
+      url,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['nome'] ?? "Empresa";
+    } else {
+      return "Empresa";
+    }
+  }
+
+  // Função de logout
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('access_token');

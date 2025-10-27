@@ -1,11 +1,17 @@
-// lib/widgets/home/home_disposal_card.dart
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '/screens/empresas_mock_page.dart';
 
 
 class HomeDisposalCard extends StatelessWidget {
-  const HomeDisposalCard({super.key});
+  final int inProgress;
+  final int finished;
+
+  const HomeDisposalCard({
+    super.key,
+    this.inProgress = 0,
+    this.finished = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -14,12 +20,12 @@ class HomeDisposalCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
         decoration: BoxDecoration(
-          gradient: const LinearGradient( // Use const aqui, pois colors agora são estáticos
+          gradient: const LinearGradient(
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
             colors: [
-              AppColors.gradientRight, // Usando o novo AppColors
-              AppColors.gradientLeft,  // Usando o novo AppColors
+              AppColors.gradientRight,
+              AppColors.gradientLeft,
             ],
           ),
           borderRadius: BorderRadius.circular(20),
@@ -41,41 +47,43 @@ class HomeDisposalCard extends StatelessWidget {
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 fontFamily: 'Poppins',
-                color: AppColors.white, // Usando o novo AppColors
+                color: AppColors.white,
               ),
             ),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: const [
+              children: [
                 Column(
                   children: [
-                    Text(
+                    const Text(
                       "Em andamento",
                       style: TextStyle(
                         fontWeight: FontWeight.w400,
                         fontSize: 18,
                         fontFamily: 'Poppins',
-                        color: AppColors.white, // Usando o novo AppColors
+                        color: AppColors.white,
                       ),
                     ),
-                    SizedBox(height: 4),
-                    Text("2", style: TextStyle(color: AppColors.white)), // Usando o novo AppColors
+                    const SizedBox(height: 4),
+                    Text(inProgress.toString(),
+                        style: const TextStyle(color: AppColors.white)),
                   ],
                 ),
                 Column(
                   children: [
-                    Text(
+                    const Text(
                       "Finalizadas",
                       style: TextStyle(
                         fontWeight: FontWeight.w400,
                         fontSize: 18,
                         fontFamily: 'Poppins',
-                        color: AppColors.white, // Usando o novo AppColors
+                        color: AppColors.white,
                       ),
                     ),
-                    SizedBox(height: 4),
-                    Text("2", style: TextStyle(color: AppColors.white)), // Usando o novo AppColors
+                    const SizedBox(height: 4),
+                    Text(finished.toString(),
+                        style: const TextStyle(color: AppColors.white)),
                   ],
                 ),
               ],
@@ -94,8 +102,8 @@ class HomeDisposalCard extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.white, // Usando o novo AppColors
-                    foregroundColor: AppColors.secondary, // Usando o novo AppColors
+                    backgroundColor: AppColors.white,
+                    foregroundColor: AppColors.secondary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),

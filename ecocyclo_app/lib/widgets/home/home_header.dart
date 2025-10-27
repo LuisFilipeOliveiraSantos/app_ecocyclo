@@ -3,11 +3,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../theme/app_colors.dart';
 
 class HomeHeader extends StatelessWidget {
-  final VoidCallback onProfilePressed; 
+  final String companyName;
+  final VoidCallback onProfilePressed;
 
   const HomeHeader({
     super.key,
-    required this.onProfilePressed, 
+    required this.companyName,
+    required this.onProfilePressed,
   });
 
   @override
@@ -48,15 +50,13 @@ class HomeHeader extends StatelessWidget {
                 padding: const EdgeInsets.only(right: 10),
                 child: GestureDetector(
                   onTap: onProfilePressed,
-                  child: Container(
-                    alignment: Alignment.center,
+                  child: SizedBox(
                     width: 50,
                     height: 50,
                     child: SvgPicture.asset(
                       "assets/icons/person.svg",
                       width: 40,
                       height: 45,
-                      // ⬅️ Substituído o 'color' por 'colorFilter'
                       colorFilter: const ColorFilter.mode(AppColors.white, BlendMode.srcIn),
                     ),
                   ),
@@ -66,7 +66,7 @@ class HomeHeader extends StatelessWidget {
           ),
           const SizedBox(height: 40),
           Text(
-            "Olá, Teknova",
+            "Olá, $companyName",
             style: TextStyle(
               color: AppColors.white.withAlpha(179),
               fontSize: 20,

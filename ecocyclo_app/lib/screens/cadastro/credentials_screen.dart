@@ -21,6 +21,8 @@ class CredentialsScreen extends StatefulWidget {
     required this.complement,
     required this.reference,
     required this.companyName,
+    this.description,
+    this.tags,
   });
 
   final String cnpj;
@@ -35,6 +37,8 @@ class CredentialsScreen extends StatefulWidget {
   final String complement;
   final String reference;
   final String companyName;
+  final String? description;
+  final List<String>? tags;
 
   @override
   State<CredentialsScreen> createState() => _CredentialsScreenState();
@@ -48,7 +52,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
 
   bool _passwordVisible = false;
   bool _confirmPasswordVisible = false;
-  bool _isLoading = false; // 👈 Bloqueio de spam
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -59,7 +63,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
   }
 
   Future<void> _handleRegister() async {
-    if (_isLoading) return; // evita múltiplos cliques
+    if (_isLoading) return;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -80,6 +84,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
         uf: widget.uf,
         complemento: widget.complement,
         referencia: widget.reference,
+        company_description: widget.description,
+        company_colector_tags: widget.tags,
       );
 
       // ✅ SnackBar de sucesso

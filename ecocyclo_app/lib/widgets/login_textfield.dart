@@ -11,6 +11,9 @@ class LoginTextField extends StatelessWidget {
   final VoidCallback? onToggle;
   final TextEditingController? controller;
   final String? Function(String?)? validator;
+  final int? minLines; // PARÂMETRO ADICIONADO
+  final int? maxLines;
+  final ValueChanged<String>? onChanged;
 
   const LoginTextField({
     super.key,
@@ -22,6 +25,9 @@ class LoginTextField extends StatelessWidget {
     this.onToggle,
     this.controller,
     this.validator,
+    this.minLines, // PARÂMETRO ADICIONADO
+    this.maxLines,
+    this.onChanged,
   });
 
   @override
@@ -33,6 +39,9 @@ class LoginTextField extends StatelessWidget {
         validator: validator,
         obscureText: obscureText && (passwordVisible != null ? !passwordVisible! : true),
         style: const TextStyle(color: Color.fromARGB(136, 255, 255, 255)),
+        onChanged: onChanged,
+        minLines: minLines ?? 1, // COMEÇA COM 1 LINHA
+        maxLines: maxLines ?? (minLines != null ? null : 1), // CRESCE ATÉ O MÁXIMO
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: const TextStyle(color: Color.fromARGB(166, 255, 255, 255)),

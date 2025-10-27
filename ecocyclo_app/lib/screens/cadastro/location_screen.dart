@@ -5,12 +5,15 @@ import 'package:ecocyclo_app/theme/app_colors.dart';
 import '../../widgets/login_textfield.dart';
 import '../../widgets/cadastro/cadastro_back_button.dart';
 import '../../widgets/cadastro/cadastro_next_button.dart';
+import '../../services/location_service.dart';
 
 class LocationScreen extends StatefulWidget {
   final String companyName;
   final String cnpj;
   final String phone;
   final String companyType;
+  final String? description;
+  final List<String>? tags;
 
   const LocationScreen({
     super.key,
@@ -18,6 +21,8 @@ class LocationScreen extends StatefulWidget {
     required this.cnpj,
     required this.phone,
     required this.companyType,
+    this.description,
+    this.tags,
   });
 
   @override
@@ -35,6 +40,8 @@ class _LocationScreenState extends State<LocationScreen> {
   final TextEditingController _complementController = TextEditingController();
   final TextEditingController _referenceController = TextEditingController();
 
+  bool _isLoadingCep = false;
+
   @override
   void dispose() {
     _zipCodeController.dispose();
@@ -46,6 +53,36 @@ class _LocationScreenState extends State<LocationScreen> {
     _complementController.dispose();
     _referenceController.dispose();
     super.dispose();
+  }
+
+  Future<void> _searchCep() async {
+    if (_zipCodeController.text.isEmpty) return;
+
+    setState(() {
+      _isLoadingCep = true;
+    });
+
+    try {
+      final cepData = await LocationService.getCepData(_zipCodeController.text);
+      
+      if (cepData != null && mounted) {
+        setState(() {
+          _streetController.text = cepData.rua;
+          _neighborhoodController.text = cepData.bairro;
+          _cityController.text = cepData.cidade;
+          _stateController.text = cepData.uf;
+        });
+      }
+    } catch (e) {
+      // Silencioso - não mostra erro se CEP não for encontrado
+      print('CEP não encontrado: ${_zipCodeController.text}');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingCep = false;
+        });
+      }
+    }
   }
 
   @override
@@ -68,6 +105,7 @@ class _LocationScreenState extends State<LocationScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Título e formulário centralizados
                 Expanded(
                   child: Center(
                     child: SingleChildScrollView(
@@ -89,16 +127,40 @@ class _LocationScreenState extends State<LocationScreen> {
                               ),
                             ),
 
-                            // CEP
-                            LoginTextField(
-                              hintText: 'CEP (00000-000)',
-                              iconPath: 'assets/icons/zip.svg',
-                              controller: _zipCodeController,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) return 'CEP obrigatório';
-                                if (!RegExp(r'^\d{5}-\d{3}$').hasMatch(value)) return 'CEP inválido';
-                                return null;
-                              },
+                            // CEP com busca automática
+                            Stack(
+                              children: [
+                                LoginTextField(
+                                  hintText: 'CEP (00000-000)',
+                                  iconPath: 'assets/icons/zip.svg',
+                                  controller: _zipCodeController,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) return 'CEP obrigatório';
+                                    if (!RegExp(r'^\d{5}-\d{3}$').hasMatch(value)) return 'CEP inválido';
+                                    return null;
+                                  },
+                                  onChanged: (value) {
+                                    // Busca automática quando CEP estiver completo
+                                    if (value.length == 9) { // 00000-000
+                                      _searchCep();
+                                    }
+                                  },
+                                ),
+                                if (_isLoadingCep)
+                                  Positioned(
+                                    right: 16,
+                                    top: 16,
+                                    child: Container(
+                                      width: 20,
+                                      height: 20,
+                                      padding: const EdgeInsets.all(2),
+                                      child: const CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.gradientLeft),
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                             const SizedBox(height: 24),
 
@@ -169,7 +231,7 @@ class _LocationScreenState extends State<LocationScreen> {
                               hintText: 'Complemento (opcional)',
                               iconPath: 'assets/icons/reference.svg',
                               controller: _complementController,
-                              validator: (value) => null, // opcional
+                              validator: (value) => null,
                             ),
                             const SizedBox(height: 24),
 
@@ -178,7 +240,7 @@ class _LocationScreenState extends State<LocationScreen> {
                               hintText: 'Referência (opcional)',
                               iconPath: 'assets/icons/reference.svg',
                               controller: _referenceController,
-                              validator: (value) => null, // opcional
+                              validator: (value) => null,
                             ),
                           ],
                         ),
@@ -187,7 +249,7 @@ class _LocationScreenState extends State<LocationScreen> {
                   ),
                 ),
 
-                // Botões
+                // Botões na parte inferior
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -205,6 +267,8 @@ class _LocationScreenState extends State<LocationScreen> {
                                 cnpj: widget.cnpj,
                                 phone: widget.phone,
                                 companyType: widget.companyType,
+                                description: widget.description,
+                                tags: widget.tags,
                                 cep: _zipCodeController.text,
                                 uf: _stateController.text,
                                 city: _cityController.text,
@@ -213,8 +277,6 @@ class _LocationScreenState extends State<LocationScreen> {
                                 neighborhood: _neighborhoodController.text,
                                 complement: _complementController.text,
                                 reference: _referenceController.text,
-
-
                               ),
                             ),
                           );

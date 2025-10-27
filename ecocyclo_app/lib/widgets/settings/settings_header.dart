@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 
 class SettingsHeader extends StatelessWidget {
-  const SettingsHeader({super.key});
+  final String companyName;
+
+  const SettingsHeader({super.key, required this.companyName});
 
   @override
   Widget build(BuildContext context) {
@@ -49,9 +51,9 @@ class SettingsHeader extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Teknova',
-              style: TextStyle(
+            Text(
+              companyName,
+              style: const TextStyle(
                 color: AppColors.white,
                 fontSize: 30,
                 fontWeight: FontWeight.w600,
