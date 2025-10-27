@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../theme/app_colors.dart';
 import '../widgets/mapa/svg_icon_container.dart';
 import '../widgets/mapa/filter_chip.dart';
@@ -7,7 +10,7 @@ import '../widgets/mapa/selectable_filter_card.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_marker_popup/flutter_map_marker_popup.dart';
-
+import '../services/auth_service.dart';
 // --------------------------------------------------------------------------
 // MODELO DE DADOS
 // --------------------------------------------------------------------------
@@ -15,19 +18,19 @@ class DisposalPoint {
   final String id;
   final String name;
   final String description;
-  final LatLng location;
+  LatLng? location; // Agora pode ser nulo até ser geocodificado
   final List<String> categories;
   final String? address;
   final String? phone;
-  final double? distance; // Distância em km
+  double? distance; // Distância em km
   final double? rating; // Avaliação (0-5)
   final String? logoPath; // Caminho para o logo da empresa
 
-  const DisposalPoint({
+  DisposalPoint({
     required this.id,
     required this.name,
     required this.description,
-    required this.location,
+    this.location,
     this.categories = const [],
     this.address,
     this.phone,
@@ -35,6 +38,36 @@ class DisposalPoint {
     this.rating,
     this.logoPath,
   });
+
+  // Factory para criar a partir de JSON da API
+  factory DisposalPoint.fromJson(Map<String, dynamic> json) {
+  // Extrair latitude e longitude da API
+  LatLng? location;
+  if (json['latitude'] != null && json['longitude'] != null) {
+    location = LatLng(
+      json['latitude'] is String 
+        ? double.parse(json['latitude']) 
+        : json['latitude'].toDouble(),
+      json['longitude'] is String 
+        ? double.parse(json['longitude']) 
+        : json['longitude'].toDouble(),
+    );
+  }
+  
+  return DisposalPoint(
+    id: json['id'].toString(),
+    name: json['name'] ?? '',
+    description: json['description'] ?? '',
+    location: location, // Já vem preenchido da API
+    categories: json['categories'] != null 
+      ? List<String>.from(json['categories']) 
+      : [],
+    address: json['address'],
+    phone: json['phone'],
+    rating: json['rating']?.toDouble(),
+    logoPath: json['logoPath'],
+  );
+}
 }
 
 class FilterDetails {
@@ -57,6 +90,7 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   bool _isLoading = true;
   bool _isSmartRecommendationActive = true;
+  String? _token;
   final List<String> _selectedFilters = ['Reciclagem', 'MarketPlace'];
   final List<String> _availableFilters = ['Reciclagem', 'Doação', 'MarketPlace', 'Reuso'];
   final MapController mapController = MapController();
@@ -66,58 +100,8 @@ class _MapScreenState extends State<MapScreen> {
   DisposalPoint? _selectedEnterprise;
   final PopupController _popupLayerController = PopupController();
 
-  
-  // DADOS DE EXEMPLO DAS EMPRESAS
-  final List<DisposalPoint> enterprisesLocations = [
-    DisposalPoint(
-      id: '1',
-      name: 'RecyclaByte',
-      description: 'Especializada na coleta, triagem e reaproveitamento de resíduos tecnológicos, a empresa atende desde residências até grandes indústrias.',
-      location: LatLng(-8.0476, -34.8770),
-      categories: ['Reciclagem'],
-      address: 'Rua Aurora, 123 - Boa Vista',
-      phone: '(81) 3333-4444',
-      distance: 3.6,
-      rating: 4.98,
-      logoPath: 'assets/icons/reciclagem.svg',
-    ),
-    DisposalPoint(
-      id: '2',
-      name: 'Tech Solidário',
-      description: 'ONG que recebe doações de equipamentos eletrônicos para projetos educacionais',
-      location: LatLng(-8.0556, -34.8810),
-      categories: ['Doação'],
-      address: 'Av. Conde da Boa Vista, 456',
-      phone: '(81) 9999-8888',
-      distance: 2.1,
-      rating: 4.85,
-      logoPath: 'assets/icons/doacao.svg',
-    ),
-    DisposalPoint(
-      id: '3',
-      name: 'Marketplace Tech',
-      description: 'Compra e venda de eletrônicos usados com garantia',
-      location: LatLng(-8.0400, -34.8900),
-      categories: ['MarketPlace'],
-      address: 'Shopping Recife, Loja 205',
-      phone: '(81) 3555-6666',
-      distance: 4.2,
-      rating: 4.72,
-      logoPath: 'assets/icons/marketplace.svg',
-    ),
-    DisposalPoint(
-      id: '4',
-      name: 'Renova Tech',
-      description: 'Reuso e recondicionamento de equipamentos eletrônicos',
-      location: LatLng(-8.0600, -34.8700),
-      categories: ['Reuso'],
-      address: 'Rua do Príncipe, 789',
-      phone: '(81) 3777-9999',
-      distance: 1.8,
-      rating: 4.91,
-      logoPath: 'assets/icons/reuso.svg',
-    ),
-  ];
+  // Lista de empresas (será preenchida pela API)
+  List<DisposalPoint> enterprisesLocations = [];
 
   final Map<String, Color> _filterColors = {
     'Reciclagem': AppColors.secondary,
@@ -148,53 +132,186 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
-    getUserLocation();
+    _initializeMap();
+    _getToken();
   }
 
-  Future<void> getUserLocation() async {
+  Future<void> _getToken() async {
+   final token = await AuthService.getToken();
+    setState(() {
+          _token = token;
+        });   
+        print('Token: $token'); // Para debug
+ 
+  }
+
+  // Inicializa o mapa obtendo a localização do usuário e empresas
+  Future<void> _initializeMap() async {
+  setState(() => _isLoading = true);
+  
+  try {
+    // 1. Obter localização da empresa do usuário (usa geocoding do endereço)
+    await _getUserCompanyLocation();
+    
+    // 2. Buscar empresas da API (já vem com lat/lng)
+    await _getCompaniesFromAPI();
+    
+    // 3. Calcular distâncias
+    _calculateDistances();
+    
+    // 4. Criar marcadores
+    _createMarkers();
+    
+    // 5. Mover mapa para localização do usuário
+    mapController.move(_initialLocation, 13);
+  } catch (e) {
+    _showError('Erro ao inicializar mapa: $e');
+  } finally {
+    setState(() => _isLoading = false);
+  }
+}
+
+  // Obter endereço da empresa do usuário a partir das informações de autenticação
+  Future<void> _getUserCompanyLocation() async {
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        _showServicoDesativado();
-        setState(() => _isLoading = false);
-        _createMarkers();
-        return;
-      }
-
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          _showLocalationNegadaError();
-          setState(() => _isLoading = false);
-          _createMarkers();
-          return;
-        }
-      }
-
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+      // SUBSTITUA ESTE ENDPOINT pela sua API de autenticação
+      // Este é um exemplo de como obter as informações
+      final response = await http.get(
+        Uri.parse('https://https://ecocyclo-back.onrender.com/api/v1/company/me'),
+        headers: {
+          'Authorization': 'Bearer $_token',
+          'Content-Type': 'application/json',
+        },
       );
 
-      setState(() {
-        _initialLocation = LatLng(position.latitude, position.longitude);
-        _isLoading = false;
-      });
-
-      _createMarkers();
-      mapController.move(_initialLocation, 14);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        String companyAddress = data['company']['address']; // Ajuste conforme sua API
+        print(response);
+        
+        // Converter endereço em coordenadas
+        final location = await _getLatLngFromAddress(companyAddress);
+        
+        if (location != null) {
+          setState(() {
+            _initialLocation = location;
+          });
+        }
+      } else {
+        throw Exception('Erro ao buscar informações do usuário');
+      }
     } catch (e) {
-      _showLocalationError('Erro ao obter localização: $e');
-      setState(() => _isLoading = false);
-      _createMarkers();
+      print('Erro ao obter localização da empresa do usuário: $e');
+      // Manter localização padrão em caso de erro
     }
+  }
+
+  // Buscar empresas da API
+  Future<void> _getCompaniesFromAPI() async {
+    try {
+      // SUBSTITUA ESTE ENDPOINT pela sua API real
+      final response = await http.get(
+        Uri.parse('https://https://ecocyclo-back.onrender.com/api/v1/company/map/coletoras'),
+        headers: {
+          'Authorization': 'Bearer $_token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        
+        setState(() {
+          enterprisesLocations = data
+            .map((item) => DisposalPoint.fromJson(item))
+            .toList();
+        });
+      } else {
+        throw Exception('Erro ao carregar empresas: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erro ao buscar empresas da API: $e');
+      // Usar dados de exemplo em caso de erro (opcional)
+      _loadFallbackData();
+    }
+  }
+
+  // Converter endereço em coordenadas
+  Future<LatLng?> _getLatLngFromAddress(String address) async {
+    if (address.isEmpty) return null;
+    
+    try {
+      List<Location> locations = await locationFromAddress(address);
+      
+      if (locations.isNotEmpty) {
+        Location location = locations.first;
+        return LatLng(location.latitude, location.longitude);
+      }
+    } catch (e) {
+      print("Erro ao converter endereço '$address': $e");
+    }
+    
+    return null;
+  }
+
+  
+
+  // Calcular distâncias entre usuário e empresas
+  void _calculateDistances() {
+    for (var enterprise in enterprisesLocations) {
+      if (enterprise.location != null) {
+        final distanceInMeters = Geolocator.distanceBetween(
+          _initialLocation.latitude,
+          _initialLocation.longitude,
+          enterprise.location!.latitude,
+          enterprise.location!.longitude,
+        );
+        
+        enterprise.distance = distanceInMeters / 1000; // Converter para km
+      }
+    }
+    
+    // Ordenar empresas por distância (opcional)
+    enterprisesLocations.sort((a, b) {
+      if (a.distance == null) return 1;
+      if (b.distance == null) return -1;
+      return a.distance!.compareTo(b.distance!);
+    });
+  }
+
+  // Dados de fallback em caso de erro na API
+  void _loadFallbackData() {
+    enterprisesLocations = [
+      DisposalPoint(
+        id: '1',
+        name: 'RecyclaByte',
+        description: 'Especializada na coleta, triagem e reaproveitamento de resíduos tecnológicos.',
+        location: LatLng(-8.0476, -34.8770),
+        categories: ['Reciclagem'],
+        address: 'Rua Aurora, 123 - Boa Vista',
+        phone: '(81) 3333-4444',
+        rating: 4.98,
+        logoPath: 'assets/icons/reciclagem.svg',
+      ),
+      DisposalPoint(
+        id: '2',
+        name: 'Tech Solidário',
+        description: 'ONG que recebe doações de equipamentos eletrônicos.',
+        location: LatLng(-8.0556, -34.8810),
+        categories: ['Doação'],
+        address: 'Av. Conde da Boa Vista, 456',
+        phone: '(81) 9999-8888',
+        rating: 4.85,
+        logoPath: 'assets/icons/doacao.svg',
+      ),
+    ];
   }
 
   void _createMarkers() {
     setState(() {
       _markers.clear();
 
-      // Marcador do usuário
+      // Marcador do usuário (empresa)
       _markers.add(
         Marker(
           point: _initialLocation,
@@ -214,7 +331,7 @@ class _MapScreenState extends State<MapScreen> {
               ],
             ),
             child: const Icon(
-              Icons.person,
+              Icons.business,
               color: Colors.white,
               size: 30,
             ),
@@ -222,8 +339,10 @@ class _MapScreenState extends State<MapScreen> {
         ),
       );
 
-      // Marcadores das empresas
-      final filteredEnterprises = _getFilteredEnterprises();
+      // Marcadores das empresas (apenas as que têm localização)
+      final filteredEnterprises = _getFilteredEnterprises()
+        .where((e) => e.location != null)
+        .toList();
       
       for (var enterprise in filteredEnterprises) {
         Color markerColor = AppColors.secondary;
@@ -233,10 +352,9 @@ class _MapScreenState extends State<MapScreen> {
 
         final isSelected = _selectedEnterprise?.id == enterprise.id;
 
-        // Criar o marker uma vez e reutilizar
         late Marker marker;
         marker = Marker(
-          point: enterprise.location,
+          point: enterprise.location!,
           width: isSelected ? 60 : 50,
           height: isSelected ? 60 : 50,
           child: GestureDetector(
@@ -311,43 +429,13 @@ class _MapScreenState extends State<MapScreen> {
     }).toList();
   }
 
-  void _showServicoDesativado() {
+  void _showError(String message) {
+    if (!mounted) return;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Localização Desabilitada'),
-        content: const Text('Por favor, habilite o serviço de localização.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showLocalationNegadaError() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Permissão Negada'),
-        content: const Text('Precisamos da permissão de localização para mostrar sua posição no mapa.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showLocalationError(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Erro de Localização'),
+        title: const Text('Erro'),
         content: Text(message),
         actions: [
           TextButton(
@@ -436,7 +524,10 @@ class _MapScreenState extends State<MapScreen> {
                         markerCenterAnimation: const MarkerCenterAnimation(),
                         popupDisplayOptions: PopupDisplayOptions(
                           builder: (BuildContext context, Marker marker) {
-                            final enterpriseList = enterprisesLocations.where((e) => e.location == marker.point).toList();
+                            final enterpriseList = enterprisesLocations
+                              .where((e) => e.location == marker.point)
+                              .toList();
+                            
                             if (enterpriseList.isEmpty) return const SizedBox.shrink();
                             final DisposalPoint enterprise = enterpriseList.first;
 
@@ -459,7 +550,6 @@ class _MapScreenState extends State<MapScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    // Botão de fechar
                                     Align(
                                       alignment: Alignment.topRight,
                                       child: GestureDetector(
@@ -491,7 +581,11 @@ class _MapScreenState extends State<MapScreen> {
                                             color: categoryColor.withOpacity(0.1),
                                             borderRadius: BorderRadius.circular(8),
                                           ),
-                                          child: const Icon(Icons.recycling, size: 24, color: AppColors.secondary),
+                                          child: Icon(
+                                            Icons.recycling, 
+                                            size: 24, 
+                                            color: categoryColor
+                                          ),
                                         ),
                                         const SizedBox(width: 8),
                                         Expanded(
@@ -509,11 +603,13 @@ class _MapScreenState extends State<MapScreen> {
                                               const SizedBox(height: 4),
                                               Row(
                                                 children: [
-                                                  Text(
-                                                    "Próximo a você (${enterprise.distance?.toStringAsFixed(1)} km)",
-                                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                                  ),
-                                                  const SizedBox(width: 6),
+                                                  if (enterprise.distance != null)
+                                                    Text(
+                                                      "${enterprise.distance!.toStringAsFixed(1)} km",
+                                                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                                    ),
+                                                  if (enterprise.distance != null && enterprise.rating != null)
+                                                    const SizedBox(width: 6),
                                                   if (enterprise.rating != null)
                                                     Row(
                                                       children: [
@@ -541,11 +637,7 @@ class _MapScreenState extends State<MapScreen> {
                                     const SizedBox(height: 6),
                                     GestureDetector(
                                       onTap: () {
-                                        // Navigator.push(context, 
-                                        //   MaterialPageRoute(builder: 
-                                        //     // (context) => EnterpriseDetailScreen(enterprise: enterprise)
-                                        //   )
-                                        // );
+                                        // Navegação para detalhes
                                       },
                                       child: Text(
                                         "ver mais...",
@@ -607,7 +699,7 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
 
-          // DRAGGABLE SHEET
+          // DRAGGABLE SHEET (mantido igual)
           DraggableScrollableSheet(
             initialChildSize: 0.15,
             minChildSize: 0.15,
@@ -636,7 +728,6 @@ class _MapScreenState extends State<MapScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Puxador
                       Center(
                         child: Container(
                           width: 40,
@@ -648,8 +739,6 @@ class _MapScreenState extends State<MapScreen> {
                           ),
                         ),
                       ),
-
-                      // Campo de busca
                       TextField(
                         decoration: InputDecoration(
                           hintText: "Digite o nome da empresa...",
@@ -667,15 +756,12 @@ class _MapScreenState extends State<MapScreen> {
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 24),
-
                       Text(
                         "Filtros",
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
-
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -697,9 +783,7 @@ class _MapScreenState extends State<MapScreen> {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 16),
-
                       GestureDetector(
                         onTap: () {
                           setState(() {
@@ -729,7 +813,6 @@ class _MapScreenState extends State<MapScreen> {
                           ],
                         ),
                       ),
-
                       if (activeFilterChips.isNotEmpty) ...[
                         const SizedBox(height: 24),
                         Row(
@@ -766,13 +849,11 @@ class _MapScreenState extends State<MapScreen> {
                           children: activeFilterChips,
                         ),
                       ],
-
                       const SizedBox(height: 24),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: selectableFilterCards,
                       ),
-
                       const SizedBox(height: 32),
                       Center(
                         child: ElevatedButton(
