@@ -56,5 +56,7 @@
 	<!-- (Opcional) Caso queira salvar na galeria futuramente -->
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Este aplicativo precisa salvar fotos na sua galeria.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Precisamos da sua localização para encontrar empresas próximas a você.</string>
 </dict>
 </plist>
