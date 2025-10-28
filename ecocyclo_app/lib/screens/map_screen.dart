@@ -595,8 +595,8 @@ class _MapScreenState extends State<MapScreen> {
                   children: [
                     TileLayer(
                       urlTemplate:
-                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'com.example.app',
+                        'https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=asLR5YMH8ynyVq879bVR',
+                        userAgentPackageName: 'com.ecocyclo.app',
                     ),
                     PopupMarkerLayer(
                       options: PopupMarkerLayerOptions(
