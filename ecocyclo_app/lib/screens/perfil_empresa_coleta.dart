@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../widgets/agendar/botao_localizacao.dart';
 import '../widgets/agendar/botao_contato.dart';
 import '../widgets/agendar/botao_enviar_solicitacao.dart';
@@ -10,7 +11,7 @@ class PerfilEmpresaColeta extends StatelessWidget {
   final String slogan;
   final double avaliacao;
   final String descricao;
-  final String imagemLogo;
+  final String imagemLogo; // caminho do asset
   final String endereco;
   final String contato;
 
@@ -32,7 +33,7 @@ class PerfilEmpresaColeta extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // Fundo com gradiente
+          // Fundo gradiente azul
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -43,7 +44,7 @@ class PerfilEmpresaColeta extends StatelessWidget {
             ),
           ),
 
-          // Conteúdo com rolagem
+          // Conteúdo rolável
           SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(
@@ -53,8 +54,12 @@ class PerfilEmpresaColeta extends StatelessWidget {
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
+                    // 🔹 Fundo branco com arco
                     Container(
                       width: double.infinity,
+                      constraints: BoxConstraints(
+                        minHeight: size.height - 160, // ocupa toda a tela
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: const BorderRadius.only(
@@ -64,11 +69,11 @@ class PerfilEmpresaColeta extends StatelessWidget {
                         border: Border.all(color: Colors.white, width: 2),
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24.0, vertical: 80),
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 80),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
+                            // Nome e slogan
                             Text(
                               nome,
                               style: const TextStyle(
@@ -87,6 +92,7 @@ class PerfilEmpresaColeta extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
 
+                            // Avaliação
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -105,7 +111,7 @@ class PerfilEmpresaColeta extends StatelessWidget {
 
                             const SizedBox(height: 25),
 
-                            // 🔹 Botões Localização e Contato
+                            // Botões Localização e Contato
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -117,6 +123,7 @@ class PerfilEmpresaColeta extends StatelessWidget {
 
                             const SizedBox(height: 30),
 
+                            // Sobre
                             const Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
@@ -141,7 +148,7 @@ class PerfilEmpresaColeta extends StatelessWidget {
 
                             const SizedBox(height: 50),
 
-                            // 🔹 Botão Enviar Solicitação
+                            // Botão Enviar Solicitação
                             BotaoEnviarSolicitacao(
                               nome: nome,
                               slogan: slogan,
@@ -154,7 +161,6 @@ class PerfilEmpresaColeta extends StatelessWidget {
                         ),
                       ),
                     ),
-
                     // 🔹 Imagem da empresa
                     Positioned(
                       top: -70,
@@ -164,8 +170,22 @@ class PerfilEmpresaColeta extends StatelessWidget {
                         backgroundColor: Colors.white,
                         child: CircleAvatar(
                           radius: 60,
-                          backgroundImage: NetworkImage(imagemLogo),
                           backgroundColor: Colors.grey[200],
+                          child: ClipOval(
+                            child: imagemLogo.endsWith('.svg')
+                                ? SvgPicture.asset(
+                                    imagemLogo,
+                                    fit: BoxFit.contain, // <--- manter proporção
+                                    width: 120,
+                                    height: 120,
+                                  )
+                                : Image.asset(
+                                    imagemLogo,
+                                    fit: BoxFit.contain, // <--- manter proporção
+                                    width: 120,
+                                    height: 120,
+                                  ),
+                          ),
                         ),
                       ),
                     ),

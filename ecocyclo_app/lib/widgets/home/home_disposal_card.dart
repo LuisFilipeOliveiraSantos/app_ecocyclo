@@ -1,6 +1,7 @@
+// lib/widgets/home/home_disposal_card.dart
+import 'package:ecocyclo_app/screens/camera_page.dart';
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
-import '/screens/empresas_mock_page.dart';
 
 
 class HomeDisposalCard extends StatelessWidget {
@@ -97,7 +98,7 @@ class HomeDisposalCard extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => const EmpresasMockPage(),
+                        builder: (context) => const CameraPage(),
                       ),
                     );
                   },

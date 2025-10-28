@@ -5,6 +5,10 @@ class AppColors {
   static const Color gradientLeft = Color(0xFF0C3A63);
   static const Color gradientRight = Color(0xFF00978A);
 
+  //gradiente vermelho
+  static const gradientRedLeft = Color(0xFFE44B4B);
+  static const gradientRedRight = Color(0xFFAA2222);
+
   // Gradiente botão "Sair da conta"
   static const LinearGradient logoutGradient = LinearGradient(
     colors: [Color(0xFFAA2222), Color(0xFF0C3A63)],
