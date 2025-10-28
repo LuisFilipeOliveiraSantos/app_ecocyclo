@@ -1,4 +1,3 @@
-import 'package:ecocyclo_app/screens/empresas_mock_page.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -12,6 +11,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_marker_popup/flutter_map_marker_popup.dart';
 import '../services/auth_service.dart';
+import 'perfil_empresa_coleta.dart';
 
 // --------------------------------------------------------------------------
 // CONSTANTES DA API (NOVO)
@@ -453,6 +453,9 @@ class _MapScreenState extends State<MapScreen> {
           height: isSelected ? 60 : 50,
           child: GestureDetector(
             onTap: () {
+              setState(() {
+                _selectedEnterprise = enterprise; // ✅ Atualiza a empresa selecionada
+              });
               _popupLayerController.togglePopup(marker);
             },
             child: _buildCustomMarker(enterprise, isSelected),
@@ -594,8 +597,7 @@ class _MapScreenState extends State<MapScreen> {
                   ),
                   children: [
                     TileLayer(
-                      urlTemplate:
-                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      urlTemplate: 'https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=asLR5YMH8ynyVq879bVR',
                       userAgentPackageName: 'com.example.app',
                     ),
                     PopupMarkerLayer(
@@ -815,113 +817,37 @@ class _MapScreenState extends State<MapScreen> {
                                         ),
                                       ],
                                     ),
-
-                                    // Descrição da empresa
-                                    if (enterprise
-                                        .company_description.isNotEmpty) ...[
-                                      const SizedBox(height: 12),
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey[50],
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                        ),
-                                        child: Text(
-                                          enterprise.company_description,
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.grey[700],
-                                            height: 1.4,
-                                          ),
-                                          maxLines: 3,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-
-                                    // Categorias
-                                    if (enterprise.categories.isNotEmpty) ...[
-                                      const SizedBox(height: 12),
-                                      Wrap(
-                                        spacing: 6,
-                                        runSpacing: 6,
-                                        children: enterprise.categories
-                                            .map((category) {
-                                          final color =
-                                              _filterColors[category] ??
-                                                  AppColors.secondary;
-                                          return Container(
-                                            padding:
-                                                const EdgeInsets.symmetric(
-                                                    horizontal: 10,
-                                                    vertical: 5),
-                                            decoration: BoxDecoration(
-                                              color: color.withOpacity(0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              border: Border.all(
-                                                  color:
-                                                      color.withOpacity(0.3)),
-                                            ),
-                                            child: Text(
-                                              category,
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: color,
-                                                fontWeight: FontWeight.w600,
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      enterprise.company_description,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    TextButton(
+                                      onPressed: () {
+                                        if (_selectedEnterprise != null) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => PerfilEmpresaColeta(
+                                                nome: _selectedEnterprise!.name,
+                                                slogan: '', // ou _selectedEnterprise!.slogan se tiver
+                                                avaliacao: _selectedEnterprise!.rating ?? 0.0,
+                                                descricao: _selectedEnterprise!.company_description,
+                                                imagemLogo: _selectedEnterprise!.logoPath ?? '',
+                                                endereco: _selectedEnterprise!.address ?? '',
+                                                contato: _selectedEnterprise!.phone ?? '',
                                               ),
                                             ),
                                           );
-                                        }).toList(),
-                                      ),
-                                    ],
-
-                                    // Botão ver mais
-                                    const SizedBox(height: 12),
-                                    GestureDetector(
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                EmpresasMockPage(
-                                              // Passa os dados necessários
-                                            ),
-                                          ),
-                                        );
+                                        } else {
+                                          print('⚠️ Nenhuma empresa selecionada');
+                                        }
                                       },
-                                      child: Container(
-                                        width: double.infinity,
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 10),
-                                        decoration: BoxDecoration(
-                                          color: categoryColor.withOpacity(0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              "Ver detalhes completos",
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.bold,
-                                                color: categoryColor,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Icon(
-                                              Icons.arrow_forward,
-                                              size: 16,
-                                              color: categoryColor,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
+                                      child: const Text('Ver mais…'),
+                                    )
                                   ],
                                 ),
                               ),

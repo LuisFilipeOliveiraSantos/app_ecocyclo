@@ -1,40 +1,137 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import '../widgets/agendar/botao_voltar_padrao.dart';
+import '../services/analyze_service.dart'; 
+import '../../theme/app_colors.dart';
+import '../../widgets/VisaoComp/Enviar_button.dart';
+
 
 class PreviewPage extends StatelessWidget {
   final String imagePath;
 
   const PreviewPage({super.key, required this.imagePath});
 
-  Future<void> salvarImagemLocal(BuildContext context) async {
-    try {
-      final directory = await getApplicationDocumentsDirectory();
-      final folderPath = '${directory.path}/descarte_fotos';
-      await Directory(folderPath).create(recursive: true);
 
-      final fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      final newFile = File('$folderPath/$fileName.jpg');
+Future<void> enviarImagemParaAnalise(BuildContext context) async {
+  try {
+    // Loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator(color: AppColors.gradientRight)),
+    );
 
-      await File(imagePath).copy(newFile.path);
+    final bytes = await File(imagePath).readAsBytes();
+    final fileName = imagePath.split('/').last;
+    final Map<String, int> items = await AnalyzeService.analyzeImage(bytes, fileName);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('📁 Foto salva em: ${newFile.path}')),
-      );
 
-      Navigator.pop(context); // volta pra câmera
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao salvar foto: $e')),
-      );
-    }
+  Navigator.of(context).pop(); // fecha loading
+
+showDialog(
+  context: context,
+  builder: (_) => AlertDialog(
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    contentPadding: const EdgeInsets.all(16),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ...items.entries.map(
+          (entry) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  entry.key[0].toUpperCase() + entry.key.substring(1),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "Quantidade: ${entry.value}",
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.gradientRedLeft, AppColors.gradientRedRight],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text("Cancelar", style: TextStyle(color: Colors.white, fontSize: 16)),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.gradientLeft, AppColors.gradientRight],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text("Confirmar", style: TextStyle(color: Colors.white, fontSize: 16)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  ),
+);
+  } catch (e) {
+    Navigator.of(context, rootNavigator: true).pop();
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Erro"),
+        content: Text("Falha ao enviar imagem:\n$e"),
+      ),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Color(0xFF000000),
       body: Stack(
         children: [
           Center(
@@ -44,13 +141,23 @@ class PreviewPage extends StatelessWidget {
             top: 0,
             left: 0,
             right: 0,
-            child: SafeArea(
+            child: Container(
+              height: 90,
+              padding: const EdgeInsets.only(top: 40, left: 12, right: 12),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppColors.primary, AppColors.secondary],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
+              ),
               child: Row(
                 children: [
                   BotaoVoltarPadrao(onPressed: () => Navigator.pop(context)),
                   const Expanded(
                     child: Text(
-                      'Pré-visualização',
+                      "Pré-visualização",
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,
@@ -59,7 +166,10 @@ class PreviewPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 48),
+                  const Opacity(
+                    opacity: 0,
+                    child: Icon(Icons.arrow_back_ios_new_rounded),
+                  ),
                 ],
               ),
             ),
@@ -71,23 +181,10 @@ class PreviewPage extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                ElevatedButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.cancel),
-                  label: const Text('Cancelar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () => salvarImagemLocal(context),
-                  icon: const Icon(Icons.send),
-                  label: const Text('Enviar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
+                EnviarButton(
+                  text: 'Analizar imagem',
+                  icon: Icons.image_outlined,
+                  onPressed: () => enviarImagemParaAnalise(context),
                 ),
               ],
             ),

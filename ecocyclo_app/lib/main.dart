@@ -12,7 +12,6 @@ import "screens/cadastro/location_screen.dart";
 import "screens/cadastro/credentials_screen.dart";
 import 'screens/agendar_descarte.dart';
 import 'screens/confirmacao.dart';
-import 'screens/empresas_mock_page.dart';
 import 'screens/camera_page.dart';
 
 
@@ -62,7 +61,6 @@ class MyApp extends StatelessWidget {
           reference: '',
         ),
         '/agendar_descarte': (context) => const AgendarDescartePage(),
-        '/empresas_mock_page': (context) => const EmpresasMockPage(),
         '/confirmacao': (context) => const ConfirmacaoPage(),
         '/camera': (context) => const CameraPage(),
       },
