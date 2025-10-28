@@ -1,3 +1,4 @@
+import 'package:ecocyclo_app/screens/empresas_mock_page.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -879,7 +880,17 @@ class _MapScreenState extends State<MapScreen> {
                                     // Botão ver mais
                                     const SizedBox(height: 12),
                                     GestureDetector(
-                                      onTap: () {},
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                EmpresasMockPage(
+                                              // Passa os dados necessários
+                                            ),
+                                          ),
+                                        );
+                                      },
                                       child: Container(
                                         width: double.infinity,
                                         padding: const EdgeInsets.symmetric(
