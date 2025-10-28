@@ -1,3 +1,4 @@
+import 'package:ecocyclo_app/screens/perfil_empresa_coleta.dart';
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '/screens/empresas_mock_page.dart';
@@ -97,7 +98,7 @@ class HomeDisposalCard extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => const EmpresasMockPage(),
+                        builder: (context) => const PerfilEmpresaColeta(empresaId: ''),
                       ),
                     );
                   },

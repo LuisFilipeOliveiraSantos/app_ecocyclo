@@ -1,4 +1,5 @@
 // lib/main.dart
+import 'package:ecocyclo_app/screens/perfil_empresa_coleta.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'screens/login.dart';
@@ -62,7 +63,7 @@ class MyApp extends StatelessWidget {
           reference: '',
         ),
         '/agendar_descarte': (context) => const AgendarDescartePage(),
-        '/empresas_mock_page': (context) => const EmpresasMockPage(),
+        '/empresas_mock_page': (context) => const PerfilEmpresaColeta(empresaId: '',),
         '/confirmacao': (context) => const ConfirmacaoPage(),
         '/camera': (context) => const CameraPage(),
       },

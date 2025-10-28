@@ -1,4 +1,5 @@
 import 'package:ecocyclo_app/screens/empresas_mock_page.dart';
+import 'package:ecocyclo_app/screens/perfil_empresa_coleta.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -332,7 +333,7 @@ class _MapScreenState extends State<MapScreen> {
         final List<dynamic> data = jsonDecode(response.body);
         return data.map((item) => DisposalPoint.fromJson(item)).toList();
       } else {
-        throw Exception('Erro ao carregar empresas: ${response.statusCode}');
+        throw Exception('Erro ao carregar empresas: ${response.statusCode} ${response.body}');
       }
     } catch (e) {
       print('Erro ao buscar empresas da API: $e');
@@ -885,8 +886,8 @@ class _MapScreenState extends State<MapScreen> {
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) =>
-                                                EmpresasMockPage(
-                                              // Passa os dados necessários
+                                                PerfilEmpresaColeta(
+                                              empresaId: enterprise.id,
                                             ),
                                           ),
                                         );
