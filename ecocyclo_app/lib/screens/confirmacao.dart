@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../widgets/agendar/botao_voltar_padrao.dart';
 import '../widgets/agendar/botao_confirmar_agendar.dart';
 
@@ -17,7 +18,7 @@ class ConfirmacaoPage extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // 🔹 Cabeçalho com gradiente e botão reutilizável
+            // 🔹 Cabeçalho com gradiente
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -70,8 +71,24 @@ class ConfirmacaoPage extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 28,
-                    backgroundImage: NetworkImage(empresa['imagemLogo'] ?? ''),
                     backgroundColor: Colors.grey[200],
+                    child: ClipOval(
+                      child: empresa['imagemLogo'] != null && empresa['imagemLogo'].endsWith('.svg')
+                          ? SvgPicture.asset(
+                              empresa['imagemLogo'],
+                              width: 56,
+                              height: 56,
+                              fit: BoxFit.contain,
+                            )
+                          : empresa['imagemLogo'] != null
+                              ? Image.asset(
+                                  empresa['imagemLogo'],
+                                  width: 56,
+                                  height: 56,
+                                  fit: BoxFit.contain,
+                                )
+                              : const SizedBox.shrink(),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -103,7 +120,7 @@ class ConfirmacaoPage extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // 🔹 Card com informações
+            // 🔹 Card com informações da coleta
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 24),
               padding: const EdgeInsets.all(20),

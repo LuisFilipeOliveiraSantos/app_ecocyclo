@@ -7,6 +7,7 @@ import '../widgets/mapa/selectable_filter_card.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_marker_popup/flutter_map_marker_popup.dart';
+import 'perfil_empresa_coleta.dart';
 
 // --------------------------------------------------------------------------
 // MODELO DE DADOS
@@ -224,7 +225,7 @@ class _MapScreenState extends State<MapScreen> {
 
       // Marcadores das empresas
       final filteredEnterprises = _getFilteredEnterprises();
-      
+
       for (var enterprise in filteredEnterprises) {
         Color markerColor = AppColors.secondary;
         if (enterprise.categories.isNotEmpty) {
@@ -233,7 +234,6 @@ class _MapScreenState extends State<MapScreen> {
 
         final isSelected = _selectedEnterprise?.id == enterprise.id;
 
-        // Criar o marker uma vez e reutilizar
         late Marker marker;
         marker = Marker(
           point: enterprise.location,
@@ -241,6 +241,9 @@ class _MapScreenState extends State<MapScreen> {
           height: isSelected ? 60 : 50,
           child: GestureDetector(
             onTap: () {
+              setState(() {
+                _selectedEnterprise = enterprise; // ✅ Atualiza a empresa selecionada
+              });
               _popupLayerController.togglePopup(marker);
             },
             child: _buildCustomMarker(enterprise, isSelected),
@@ -426,7 +429,7 @@ class _MapScreenState extends State<MapScreen> {
                   ),
                   children: [
                     TileLayer(
-                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      urlTemplate: 'https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=asLR5YMH8ynyVq879bVR',
                       userAgentPackageName: 'com.example.app',
                     ),
                     PopupMarkerLayer(
@@ -539,23 +542,29 @@ class _MapScreenState extends State<MapScreen> {
                                       style: const TextStyle(fontSize: 12, color: Colors.grey),
                                     ),
                                     const SizedBox(height: 6),
-                                    GestureDetector(
-                                      onTap: () {
-                                        // Navigator.push(context, 
-                                        //   MaterialPageRoute(builder: 
-                                        //     // (context) => EnterpriseDetailScreen(enterprise: enterprise)
-                                        //   )
-                                        // );
+                                    TextButton(
+                                      onPressed: () {
+                                        if (_selectedEnterprise != null) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => PerfilEmpresaColeta(
+                                                nome: _selectedEnterprise!.name,
+                                                slogan: '', // ou _selectedEnterprise!.slogan se tiver
+                                                avaliacao: _selectedEnterprise!.rating ?? 0.0,
+                                                descricao: _selectedEnterprise!.description,
+                                                imagemLogo: _selectedEnterprise!.logoPath ?? '',
+                                                endereco: _selectedEnterprise!.address ?? '',
+                                                contato: _selectedEnterprise!.phone ?? '',
+                                              ),
+                                            ),
+                                          );
+                                        } else {
+                                          print('⚠️ Nenhuma empresa selecionada');
+                                        }
                                       },
-                                      child: Text(
-                                        "ver mais...",
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                          color: categoryColor,
-                                        ),
-                                      ),
-                                    ),
+                                      child: const Text('Ver mais…'),
+                                    )
                                   ],
                                 ),
                               ),
