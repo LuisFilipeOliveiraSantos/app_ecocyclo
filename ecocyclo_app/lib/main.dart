@@ -1,4 +1,5 @@
 // lib/main.dart
+import 'package:ecocyclo_app/screens/map_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'screens/login.dart';
@@ -63,6 +64,7 @@ class MyApp extends StatelessWidget {
         '/agendar_descarte': (context) => const AgendarDescartePage(),
         '/confirmacao': (context) => const ConfirmacaoPage(),
         '/camera': (context) => const CameraPage(),
+        '/mapa': (context) => const MapScreen(),
       },
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class BotaoEnviarSolicitacao extends StatelessWidget {
+  final Map<String, int> geminiItens;
   final String nome;
   final String slogan;
   final String imagemLogo;
@@ -8,6 +9,7 @@ class BotaoEnviarSolicitacao extends StatelessWidget {
 
   const BotaoEnviarSolicitacao({
     super.key,
+    required this.geminiItens,
     required this.nome,
     required this.slogan,
     required this.imagemLogo,
@@ -41,6 +43,7 @@ class BotaoEnviarSolicitacao extends StatelessWidget {
             '/agendar_descarte',
             arguments: {
               'empresa': {
+                'geminiItens': geminiItens,
                 'nome': nome,
                 'slogan': slogan,
                 'imagemLogo': imagemLogo,

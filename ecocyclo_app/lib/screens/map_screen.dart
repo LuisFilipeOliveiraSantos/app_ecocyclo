@@ -533,6 +533,7 @@ class _MapScreenState extends State<MapScreen> {
   // 10. ATUALIZADO: build() agora inclui o onMapReady
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, int>;
     final activeFilterChips = _selectedFilters
         .where((name) => _filterDetails.containsKey(name))
         .map((name) {
@@ -832,8 +833,9 @@ class _MapScreenState extends State<MapScreen> {
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) => PerfilEmpresaColeta(
+                                                geminiItens: args,
                                                 nome: _selectedEnterprise!.name,
-                                                slogan: '', // ou _selectedEnterprise!.slogan se tiver
+                                                slogan: _selectedEnterprise!.id, // ou _selectedEnterprise!.slogan se tiver
                                                 avaliacao: _selectedEnterprise!.rating ?? 0.0,
                                                 descricao: _selectedEnterprise!.company_description,
                                                 imagemLogo: _selectedEnterprise!.logoPath ?? '',

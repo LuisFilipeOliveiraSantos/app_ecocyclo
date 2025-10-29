@@ -7,6 +7,7 @@ import '../widgets/agendar/botao_voltar.dart';
 import '../widgets/agendar/botao_chat.dart';
 
 class PerfilEmpresaColeta extends StatelessWidget {
+  final Map<String, int> geminiItens;
   final String nome;
   final String slogan;
   final double avaliacao;
@@ -17,6 +18,7 @@ class PerfilEmpresaColeta extends StatelessWidget {
 
   const PerfilEmpresaColeta({
     super.key,
+    required this.geminiItens,
     required this.nome,
     required this.slogan,
     required this.avaliacao,
@@ -150,6 +152,7 @@ class PerfilEmpresaColeta extends StatelessWidget {
 
                             // Botão Enviar Solicitação
                             BotaoEnviarSolicitacao(
+                              geminiItens: geminiItens,
                               nome: nome,
                               slogan: slogan,
                               imagemLogo: imagemLogo,

@@ -98,7 +98,7 @@ showDialog(
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => Navigator.pushNamed(context, '/mapa', arguments: items),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
@@ -182,7 +182,7 @@ showDialog(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 EnviarButton(
-                  text: 'Analizar imagem',
+                  text: 'Analisar imagem',
                   icon: Icons.image_outlined,
                   onPressed: () => enviarImagemParaAnalise(context),
                 ),

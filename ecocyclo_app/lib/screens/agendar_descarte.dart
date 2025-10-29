@@ -180,11 +180,12 @@ class _AgendarDescartePageState extends State<AgendarDescartePage> {
                     }
 
                     final empresa = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>? ?? {};
-
+                    print(empresa['empresa']['geminiItens']);
                     Navigator.pushNamed(
                       context,
                       '/confirmacao',
                       arguments: {
+                        'geminiItens': empresa['empresa']['geminiItens'],
                         'empresa': empresa['empresa'],
                         'data': _selectedDay!.toString().split(' ')[0],
                         'hora': _selectedTime,
