@@ -63,6 +63,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
   }
 
   Future<void> _handleRegister() async {
+    // ... (Seu código de registro permanece o mesmo) ...
     if (_isLoading) return;
     if (!_formKey.currentState!.validate()) return;
 
@@ -189,6 +190,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true, // Garante que o Scaffold se ajusta ao teclado
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -206,67 +208,75 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // *** Alteração: Usar SingleChildScrollView para a área de formulário ***
                 Expanded(
-                  child: Center(
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 48.0),
-                            child: Text(
-                              'Credenciais de Acesso',
-                              style: GoogleFonts.poppins(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white,
-                                letterSpacing: 0.5,
+                  child: SingleChildScrollView( // Permite a rolagem quando o teclado está aberto
+                    child: Center(
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 48.0, top: 24.0), // Adicionado um top padding
+                              child: Text(
+                                'Credenciais de Acesso',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                  letterSpacing: 0.5,
+                                ),
                               ),
                             ),
-                          ),
-                          LoginTextField(
-                            hintText: 'Email',
-                            iconPath: 'assets/icons/email.svg',
-                            controller: _emailController,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) return 'Email obrigatório';
-                              if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) return 'Email inválido';
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 32),
-                          LoginTextField(
-                            hintText: 'Senha',
-                            iconPath: 'assets/icons/password.svg',
-                            obscureText: true,
-                            passwordVisible: _passwordVisible,
-                            onToggle: () => setState(() => _passwordVisible = !_passwordVisible),
-                            controller: _passwordController,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) return 'Senha obrigatória';
-                              if (value.length < 6) return 'Senha muito curta';
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 32),
-                          LoginTextField(
-                            hintText: 'Confirme a Senha',
-                            iconPath: 'assets/icons/password.svg',
-                            obscureText: true,
-                            passwordVisible: _confirmPasswordVisible,
-                            onToggle: () => setState(() => _confirmPasswordVisible = !_confirmPasswordVisible),
-                            controller: _confirmPasswordController,
-                            validator: (value) {
-                              if (value != _passwordController.text) return 'Senhas não conferem';
-                              return null;
-                            },
-                          ),
-                        ],
+                            LoginTextField(
+                              hintText: 'Email',
+                              iconPath: 'assets/icons/email.svg',
+                              controller: _emailController,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) return 'Email obrigatório';
+                                if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) return 'Email inválido';
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 32),
+                            LoginTextField(
+                              hintText: 'Senha',
+                              iconPath: 'assets/icons/password.svg',
+                              obscureText: true,
+                              passwordVisible: _passwordVisible,
+                              onToggle: () => setState(() => _passwordVisible = !_passwordVisible),
+                              controller: _passwordController,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) return 'Senha obrigatória';
+                                if (value.length < 6) return 'Senha muito curta';
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 32),
+                            LoginTextField(
+                              hintText: 'Confirme a Senha',
+                              iconPath: 'assets/icons/password.svg',
+                              obscureText: true,
+                              passwordVisible: _confirmPasswordVisible,
+                              onToggle: () => setState(() => _confirmPasswordVisible = !_confirmPasswordVisible),
+                              controller: _confirmPasswordController,
+                              validator: (value) {
+                                if (value != _passwordController.text) return 'Senhas não conferem';
+                                return null;
+                              },
+                            ),
+                            // Adicionado um espaço inferior para garantir que o último campo não fique escondido pelo teclado
+                            const SizedBox(height: 32), 
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
+                // Fim da alteração para SingleChildScrollView
+                
+                // Botões (parte inferior que deve ficar fixa)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
