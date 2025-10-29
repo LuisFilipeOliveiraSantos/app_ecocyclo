@@ -24,7 +24,7 @@ class _CompanyScreenState extends State<CompanyScreen> {
   List<String> _selectedTags = [];
   final List<String> _availableTags = ["venda", "doacao", "marketplace", "reuso"];
 
-  // Nomes bonitos para exibição no frontend
+
   final Map<String, String> _tagDisplayNames = {
     "venda": "Venda",
     "doacao": "Doação", 
@@ -258,7 +258,7 @@ class _CompanyScreenState extends State<CompanyScreen> {
                                 companyType: _selectedCompanyType!,
                                 description: _descriptionController.text,
                                 tags: _selectedCompanyType == 'coletora' 
-                                    ? _selectedTags.toList() // Envia as tags originais em minúsculo
+                                    ? _selectedTags.toList() 
                                     : null,
                               ),
                             ),

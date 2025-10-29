@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:cached_network_image/cached_network_image.dart'; // Adicione este pacote
 import '../widgets/agendar/botao_localizacao.dart';
 import '../widgets/agendar/botao_contato.dart';
 import '../widgets/agendar/botao_enviar_solicitacao.dart';
@@ -12,7 +13,7 @@ class PerfilEmpresaColeta extends StatelessWidget {
   final String slogan;
   final double avaliacao;
   final String descricao;
-  final String imagemLogo; // caminho do asset
+  final String imagemLogo; // agora pode ser URL ou asset path
   final String endereco;
   final String contato;
 
@@ -27,6 +28,83 @@ class PerfilEmpresaColeta extends StatelessWidget {
     required this.endereco,
     required this.contato,
   });
+
+  // Método para verificar se é uma URL
+  bool get _isNetworkImage {
+    return imagemLogo.startsWith('http://') || 
+           imagemLogo.startsWith('https://');
+  }
+
+  // Método para verificar se é SVG
+  bool get _isSvg {
+    return imagemLogo.toLowerCase().endsWith('.svg');
+  }
+
+  // Widget para carregar a imagem
+  Widget _buildLogoImage() {
+    if (_isNetworkImage) {
+      // Se for uma URL
+      if (_isSvg) {
+        // SVG de rede
+        return SvgPicture.network(
+          imagemLogo,
+          fit: BoxFit.contain,
+          width: 120,
+          height: 120,
+          placeholderBuilder: (context) => Container(
+            width: 120,
+            height: 120,
+            color: Colors.grey[200],
+            child: const Icon(Icons.business, color: Colors.grey, size: 40),
+          ),
+        );
+      } else {
+        // Imagem normal de rede com cache
+        return CachedNetworkImage(
+          imageUrl: imagemLogo,
+          fit: BoxFit.contain,
+          width: 120,
+          height: 120,
+          placeholder: (context, url) => Container(
+            color: Colors.grey[200],
+            child: const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFF0066A2),
+                strokeWidth: 2,
+              ),
+            ),
+          ),
+          errorWidget: (context, url, error) => Container(
+            color: Colors.grey[200],
+            child: const Icon(Icons.business, color: Colors.grey, size: 40),
+          ),
+        );
+      }
+    } else {
+      // Se for asset local
+      if (_isSvg) {
+        // SVG local
+        return SvgPicture.asset(
+          imagemLogo,
+          fit: BoxFit.contain,
+          width: 120,
+          height: 120,
+        );
+      } else {
+        // Imagem local
+        return Image.asset(
+          imagemLogo,
+          fit: BoxFit.contain,
+          width: 120,
+          height: 120,
+          errorBuilder: (context, error, stackTrace) => Container(
+            color: Colors.grey[200],
+            child: const Icon(Icons.business, color: Colors.grey, size: 40),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -175,19 +253,7 @@ class PerfilEmpresaColeta extends StatelessWidget {
                           radius: 60,
                           backgroundColor: Colors.grey[200],
                           child: ClipOval(
-                            child: imagemLogo.endsWith('.svg')
-                                ? SvgPicture.asset(
-                                    imagemLogo,
-                                    fit: BoxFit.contain, // <--- manter proporção
-                                    width: 120,
-                                    height: 120,
-                                  )
-                                : Image.asset(
-                                    imagemLogo,
-                                    fit: BoxFit.contain, // <--- manter proporção
-                                    width: 120,
-                                    height: 120,
-                                  ),
+                            child: _buildLogoImage(),
                           ),
                         ),
                       ),
