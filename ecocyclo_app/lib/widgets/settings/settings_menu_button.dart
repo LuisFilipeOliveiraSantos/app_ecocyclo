@@ -9,22 +9,23 @@ class SettingsMenuButton extends StatelessWidget {
   final String text;
   final String? svgIconPath;
   final LinearGradient? textGradient;
-  final VoidCallback? onPressed; // <-- Adicionado
+  final VoidCallback? onPressed;
 
   const SettingsMenuButton({
     super.key,
     required this.text,
     this.svgIconPath,
     this.textGradient,
-    this.onPressed, // <-- Adicionado
+    this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Padding ajustado para full-width
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 70),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: GestureDetector(
-        onTap: onPressed ?? () => logger.i("$text clicado!"), // <-- Usa onPressed se fornecido
+        onTap: onPressed ?? () => logger.i("$text clicado!"),
         child: Container(
           height: 80,
           decoration: BoxDecoration(
@@ -45,19 +46,36 @@ class SettingsMenuButton extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  if (svgIconPath != null)
-                    SvgPicture.asset(
-                      svgIconPath!,
-                      width: 30,
-                      height: 30,
-                      colorFilter: const ColorFilter.mode(
-                        AppColors.gradientLeft,
-                        BlendMode.srcIn,
-                      ),
+                  // 1. GARANTE O ESPAÇAMENTO DO ÍCONE (Sempre presente)
+                  Opacity(
+                    opacity: svgIconPath != null ? 1.0 : 0.0,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (svgIconPath != null)
+                          SvgPicture.asset(
+                            svgIconPath!,
+                            width: 30,
+                            height: 30,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.gradientLeft,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                        const SizedBox(width: 12),
+                      ],
                     ),
-                  if (svgIconPath != null) const SizedBox(width: 12),
+                  ),
+
+                  // 2. TEXTO COM ALINHAMENTO CONDICIONAL
                   Expanded(
-                    child: Center(
+                    child: Align(
+                      // 🌟 MUDANÇA AQUI: ALINHAMENTO CONDICIONAL 🌟
+                      // Se tem ícone, desloca para a esquerda (-0.15).
+                      // Se NÃO tem ícone, centraliza (0.0).
+                      alignment: svgIconPath != null
+                          ? const Alignment(-0.15, 0)
+                          : const Alignment(0.0, 0),
                       child: textGradient != null
                           ? ShaderMask(
                               shaderCallback: (bounds) =>
