@@ -36,9 +36,12 @@ class DisposalPoint {
   double? distance;
   final double? rating;
   final int? totalRatings;
-  final String? logoPath;
+  final String? logoPath; // Agora vai receber a URL
   final String? city;
   final String? state;
+  final String? bairro;
+  final String? rua;
+  final String? numero;
 
   DisposalPoint({
     required this.id,
@@ -54,6 +57,9 @@ class DisposalPoint {
     this.logoPath,
     this.city,
     this.state,
+    this.bairro,
+    this.rua,
+    this.numero,
   });
 
   // Factory para criar a partir de JSON da API /map/coletoras
@@ -78,9 +84,18 @@ class DisposalPoint {
       categories = tags.map((tag) => _mapTagToCategory(tag)).toList();
     }
 
-    // Construir endereço a partir de cidade e UF
+    // Construir endereço completo a partir dos campos individuais
     String? address;
-    if (json['cidade'] != null && json['uf'] != null) {
+    final parts = <String>[];
+    if (json['rua'] != null) parts.add(json['rua']);
+    if (json['numero'] != null) parts.add(json['numero']);
+    if (json['bairro'] != null) parts.add(json['bairro']);
+    if (json['cidade'] != null) parts.add(json['cidade']);
+    if (json['uf'] != null) parts.add(json['uf']);
+    
+    if (parts.isNotEmpty) {
+      address = parts.join(', ');
+    } else if (json['cidade'] != null && json['uf'] != null) {
       address = '${json['cidade']}, ${json['uf']}';
     }
 
@@ -91,12 +106,15 @@ class DisposalPoint {
       location: location,
       categories: categories,
       address: address,
-      phone: null,
+      phone: json['telefone'], // ← AGORA CAPTURA O TELEFONE
       rating: json['rating_average']?.toDouble(),
       totalRatings: json['total_ratings'],
-      logoPath: null,
+      logoPath: json['company_photo_url'], // ← AGORA CAPTURA A URL DA IMAGEM
       city: json['cidade'],
       state: json['uf'],
+      bairro: json['bairro'],
+      rua: json['rua'],
+      numero: json['numero'],
     );
   }
 
@@ -833,12 +851,12 @@ class _MapScreenState extends State<MapScreen> {
                                             MaterialPageRoute(
                                               builder: (context) => PerfilEmpresaColeta(
                                                 nome: _selectedEnterprise!.name,
-                                                slogan: '', // ou _selectedEnterprise!.slogan se tiver
-                                                avaliacao: _selectedEnterprise!.rating ?? 0.0,
-                                                descricao: _selectedEnterprise!.company_description,
-                                                imagemLogo: _selectedEnterprise!.logoPath ?? '',
-                                                endereco: _selectedEnterprise!.address ?? '',
-                                                contato: _selectedEnterprise!.phone ?? '',
+                                                    slogan: "", 
+                                                    avaliacao: _selectedEnterprise!.rating ?? 0.0,
+                                                    descricao: _selectedEnterprise!.company_description, 
+                                                    imagemLogo: _selectedEnterprise!.logoPath ?? '',
+                                                    endereco: _selectedEnterprise!.address ?? '',
+                                                    contato: _selectedEnterprise!.phone ?? '', //
                                               ),
                                             ),
                                           );
