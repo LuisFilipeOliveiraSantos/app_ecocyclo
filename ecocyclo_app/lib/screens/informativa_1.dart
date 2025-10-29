@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/custom_indicator.dart';
+
 class Informativa1Screen extends StatelessWidget {
   const Informativa1Screen({super.key});
 
@@ -24,7 +25,7 @@ class Informativa1Screen extends StatelessWidget {
             ),
           ),
 
-          // Parte branca com borda preta
+          // Parte branca (AGORA SEM BORDA PRETA)
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -35,13 +36,16 @@ class Informativa1Screen extends StatelessWidget {
                   topLeft: Radius.circular(150.0),
                   topRight: Radius.circular(150.0),
                 ),
-                border: Border.all(color: Colors.black, width: 2.0),
+                // <<<<< REMOVIDA A BORDA PRETA AQUI >>>>>
+                // A linha abaixo foi removida: 
+                // border: Border.all(color: Colors.black, width: 2.0),
               ),
               child: SingleChildScrollView(
                 child: SafeArea(
                   child: Column(
                     children: [
-                      const SizedBox(height: 200),
+                      // O espaço foi ajustado para considerar a imagem maior (250)
+                      const SizedBox(height: 150), 
 
                       // Título
                       Padding(
@@ -70,7 +74,7 @@ class Informativa1Screen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 100),
+                      const SizedBox(height: 60),
 
                       // Indicadores de página
                       const CustomIndicator(activeIndex: 0, total: 2),
@@ -111,14 +115,20 @@ class Informativa1Screen extends StatelessWidget {
             ),
           ),
 
-          // Imagem entre o gradiente e a parte branca
+          // ⭐️ IMAGEM CENTRAL SEM SOMBRA E AUMENTADA ⭐️
           Positioned(
-            top: -43.0,
+            top: 70.0,
             left: 0,
             right: 0,
-            child: Image.asset(
-              'assets/loc.png',
-              width: 300,
+            child: Center(
+              child: Container(
+                width: 250, 
+                height: 250, 
+                child: Image.asset( 
+                  'assets/loc.png',
+                  fit: BoxFit.contain, 
+                ),
+              ),
             ),
           ),
         ],

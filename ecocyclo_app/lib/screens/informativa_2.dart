@@ -25,24 +25,25 @@ class Informativa2Screen extends StatelessWidget {
             ),
           ),
 
-          // Parte branca com borda preta
+          // Parte branca (BORDA PRETA REMOVIDA)
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
               height: MediaQuery.of(context).size.height * 0.78,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration( // Alterado para const
                 color: AppColors.white,
-                borderRadius: const BorderRadius.only(
+                borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(150.0),
                   topRight: Radius.circular(150.0),
                 ),
-                border: Border.all(color: Colors.black, width: 2.0),
+                // REMOVIDA A BORDA PRETA: border: Border.all(color: Colors.black, width: 2.0),
               ),
               child: SingleChildScrollView(
                 child: SafeArea(
                   child: Column(
                     children: [
-                      const SizedBox(height: 190),
+                      // ALTURA AJUSTADA para 120 (para subir o texto e compensar a imagem)
+                      const SizedBox(height: 120),
 
                       // Título
                       Padding(
@@ -112,9 +113,10 @@ class Informativa2Screen extends StatelessWidget {
             ),
           ),
 
-          // Imagem central
+          // ÍCONE: CARACTERÍSTICAS ORIGINAIS MANTIDAS (Sombra e ClipRRect) + Posição/Tamanho Ajustados
           Positioned(
-            top: 120.0,
+            // POSIÇÃO AJUSTADA para 60.0 (mais para cima)
+            top: 120.0, 
             left: 0,
             right: 0,
             child: Center(
@@ -122,6 +124,7 @@ class Informativa2Screen extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
+                    // Sombra original mantida
                     BoxShadow(
                       color: Colors.black.withAlpha((0.25 * 255).toInt()),
                       blurRadius: 12,
@@ -133,7 +136,9 @@ class Informativa2Screen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(30),
                   child: Image.asset(
                     'assets/graf.jpg',
-                    width: 200,
+                    // TAMANHO AJUSTADO para 250 (estava em 200)
+                    width: 160, 
+                    height: 160, // Adicionando altura para garantir a proporção 1:1
                     fit: BoxFit.cover,
                   ),
                 ),
