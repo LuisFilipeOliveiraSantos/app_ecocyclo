@@ -3,6 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../widgets/agendar/botao_voltar_padrao.dart';
 import '../widgets/agendar/botao_confirmar_agendar.dart';
 import '../services/confirmacao_service.dart';
+import '../services/auth_service.dart';
+import '../services/discard_service.dart';
 
 class ConfirmacaoPage extends StatelessWidget {
   const ConfirmacaoPage({super.key});
@@ -11,11 +13,13 @@ class ConfirmacaoPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>? ?? {};
     final empresa = args['empresa'] ?? {};
-    final local_coleta = empresa['endereco'];
     final data = args['data'] ?? 'Não definida';
     final hora = args['hora'] ?? 'Não definida';
+    final id_solicitada = empresa['id_solicitada'];
     final geminiItens = empresa['geminiItens'] ?? {};
     final data_descarte = ConfirmacaoService.combinarDataHora(data, hora);
+    final local_coleta = empresa['endereco'];
+   
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -175,8 +179,15 @@ class ConfirmacaoPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               child: BotaoConfirmarAgendar(
-                onPressed: () {
-                  print(local_coleta);
+                onPressed: () async {
+                  final id_solicitante = await AuthService.getCompanyId();
+                  await DiscardService.createDiscard(
+                    idSolicitante: id_solicitante,
+                    idSolicitada: id_solicitada,
+                    geminiItens: geminiItens,
+                    dataDescarte: data_descarte,
+                    localColeta: local_coleta,
+                      );
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Coleta confirmada com sucesso!'),

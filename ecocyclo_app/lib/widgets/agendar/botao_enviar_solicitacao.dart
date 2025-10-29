@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class BotaoEnviarSolicitacao extends StatelessWidget {
   final Map<String, int> geminiItens;
   final String nome;
-  final String slogan;
+  final String id_solicitada;
   final String imagemLogo;
   final String endereco;
 
@@ -11,7 +11,7 @@ class BotaoEnviarSolicitacao extends StatelessWidget {
     super.key,
     required this.geminiItens,
     required this.nome,
-    required this.slogan,
+    required this.id_solicitada,
     required this.imagemLogo,
     required this.endereco,
   });
@@ -45,7 +45,7 @@ class BotaoEnviarSolicitacao extends StatelessWidget {
               'empresa': {
                 'geminiItens': geminiItens,
                 'nome': nome,
-                'slogan': slogan,
+                'id_solicitada': id_solicitada,
                 'imagemLogo': imagemLogo,
                 'endereco': endereco,
               },

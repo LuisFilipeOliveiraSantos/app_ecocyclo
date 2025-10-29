@@ -853,7 +853,7 @@ class _MapScreenState extends State<MapScreen> {
                                               builder: (context) => PerfilEmpresaColeta(
                                                 geminiItens: args,
                                                 nome: _selectedEnterprise!.name,
-                                                slogan: _selectedEnterprise!.id, // ou _selectedEnterprise!.slogan se tiver
+                                                id_solicitada: _selectedEnterprise!.id, 
                                                 avaliacao: _selectedEnterprise!.rating ?? 0.0,
                                                 descricao: _selectedEnterprise!.company_description,
                                                 imagemLogo: _selectedEnterprise!.logoPath ?? '',

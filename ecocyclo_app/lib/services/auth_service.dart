@@ -54,6 +54,26 @@ class AuthService {
       return "Empresa";
     }
   }
+    // ✅ NOVA FUNÇÃO: Buscar UUID da empresa
+  static Future<String> getCompanyId() async {
+    final token = await getToken();
+    if (token == null) return "";
+
+    final url = Uri.parse("${ApiConfig.baseUrl}/api/v1/company/me");
+
+    final response = await http.get(
+      url,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['uuid'] ?? "";
+    } else {
+      return "";
+    }
+  }
+
 
   // Função de logout
   static Future<void> logout() async {

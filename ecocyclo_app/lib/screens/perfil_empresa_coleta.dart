@@ -10,7 +10,7 @@ import '../widgets/agendar/botao_chat.dart';
 class PerfilEmpresaColeta extends StatelessWidget {
   final Map<String, int> geminiItens;
   final String nome;
-  final String slogan;
+  final String id_solicitada;
   final double avaliacao;
   final String descricao;
   final String imagemLogo; // agora pode ser URL ou asset path
@@ -21,7 +21,7 @@ class PerfilEmpresaColeta extends StatelessWidget {
     super.key,
     required this.geminiItens,
     required this.nome,
-    required this.slogan,
+    required this.id_solicitada,
     required this.avaliacao,
     required this.descricao,
     required this.imagemLogo,
@@ -162,14 +162,7 @@ class PerfilEmpresaColeta extends StatelessWidget {
                                 color: Color(0xFF0066A2),
                               ),
                             ),
-                            Text(
-                              slogan,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF00A4A4),
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
+                            
                             const SizedBox(height: 8),
 
                             // Avaliação
@@ -232,7 +225,7 @@ class PerfilEmpresaColeta extends StatelessWidget {
                             BotaoEnviarSolicitacao(
                               geminiItens: geminiItens,
                               nome: nome,
-                              slogan: slogan,
+                              id_solicitada: id_solicitada,
                               imagemLogo: imagemLogo,
                               endereco: endereco,
                             ),

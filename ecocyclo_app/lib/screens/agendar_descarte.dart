@@ -185,6 +185,7 @@ class _AgendarDescartePageState extends State<AgendarDescartePage> {
                       context,
                       '/confirmacao',
                       arguments: {
+                        'id_solicitada': empresa['empresa']['id_solicitada'],
                         'geminiItens': empresa['empresa']['geminiItens'],
                         'empresa': empresa['empresa'],
                         'data': _selectedDay!.toString().split(' ')[0],
