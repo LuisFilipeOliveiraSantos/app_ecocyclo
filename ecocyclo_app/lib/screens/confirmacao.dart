@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+
 import '../widgets/agendar/botao_voltar_padrao.dart';
 import '../widgets/agendar/botao_confirmar_agendar.dart';
 import '../services/confirmacao_service.dart';
@@ -80,23 +80,6 @@ class ConfirmacaoPage extends StatelessWidget {
                   CircleAvatar(
                     radius: 28,
                     backgroundColor: Colors.grey[200],
-                    child: ClipOval(
-                      child: empresa['imagemLogo'] != null && empresa['imagemLogo'].endsWith('.svg')
-                          ? SvgPicture.asset(
-                              empresa['imagemLogo'],
-                              width: 56,
-                              height: 56,
-                              fit: BoxFit.contain,
-                            )
-                          : empresa['imagemLogo'] != null
-                              ? Image.asset(
-                                  empresa['imagemLogo'],
-                                  width: 56,
-                                  height: 56,
-                                  fit: BoxFit.contain,
-                                )
-                              : const SizedBox.shrink(),
-                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
