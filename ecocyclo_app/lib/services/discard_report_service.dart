@@ -7,63 +7,62 @@ import 'auth_service.dart';
 
 class DiscardReportService {
   static Future<List<dynamic>> getCompanyDiscards(String companyId) async {
-    // DEBUG: Verificar o formato do ID
-    print('🔍 Formato do Company ID: $companyId');
-    print('🔍 Tamanho do ID: ${companyId.length} caracteres');
-    print('🔍 É UUID?: ${_isUuid(companyId)}');
+    print('🔍 Buscando TODOS os descartes da empresa: $companyId');
     
-    // Se for UUID, tentamos converter para ObjectId
-    final effectiveCompanyId = _isUuid(companyId) 
-        ? _convertUuidToObjectId(companyId)
-        : companyId;
-    
-    print('🔍 ID que será enviado: $effectiveCompanyId');
-    
-    final url = Uri.parse("${ApiConfig.baseUrl}/api/v1/discards/company/$effectiveCompanyId");
+    // AGORA USA UUID DIRETAMENTE (backend corrigido)
+    final url = Uri.parse("${ApiConfig.baseUrl}/api/v1/discards/company/$companyId");
     
     final token = await AuthService.getToken();
-    
     final headers = {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
 
-    print('📡 Buscando descartes da empresa: $effectiveCompanyId');
+    print('📡 URL da requisição: $url');
     
     try {
       final response = await http.get(url, headers: headers);
-
       print('📥 Resposta da API: ${response.statusCode}');
-      print('📥 Body da resposta: ${response.body}');
       
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        print('📊 Total de descartes encontrados: ${data.length}');
+        print('✅ Encontrados ${data.length} descartes reais!');
+        
+        // DEBUG: Mostrar resumo dos descartes
+        if (data.isNotEmpty) {
+          int totalItens = 0;
+          for (var discard in data) {
+            final itens = discard['itens_descarte'] as Map<String, dynamic>? ?? {};
+            itens.forEach((key, value) {
+              final quantidade = _parseQuantidade(value);
+              totalItens += quantidade;
+            });
+          }
+          print('📊 Total de itens em todos os descartes: $totalItens');
+        }
+        
         return data;
       } else {
-        final decoded = jsonDecode(response.body);
-        final message = decoded['detail'] ?? decoded['message'] ?? 'Erro ao buscar descartes';
-        throw Exception('Erro ${response.statusCode}: $message');
+        print('❌ Erro ${response.statusCode}: ${response.body}');
+        return [];
       }
     } catch (e) {
       print('❌ Erro na requisição: $e');
-      rethrow;
+      return [];
     }
   }
 
-  // Verificar se é UUID
-  static bool _isUuid(String id) {
-    final uuidRegex = RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', caseSensitive: false);
-    return uuidRegex.hasMatch(id);
-  }
-
-  // Tentativa de converter UUID para ObjectId
-  static String _convertUuidToObjectId(String uuid) {
-    // Remove hífens e pega os primeiros 24 caracteres
-    final withoutDashes = uuid.replaceAll('-', '');
-    return withoutDashes.length >= 24 
-        ? withoutDashes.substring(0, 24)
-        : withoutDashes.padRight(24, '0');
+  // MÉTODO AUXILIAR: Converter qualquer valor para int seguro
+  static int _parseQuantidade(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    if (value is Map<String, dynamic>) {
+      final quant = value['quantidade'];
+      return _parseQuantidade(quant);
+    }
+    return 0;
   }
 
   // Método para processar os dados do backend para o formato da tela
@@ -74,10 +73,13 @@ class DiscardReportService {
       final itensDescarte = discard['itens_descarte'] as Map<String, dynamic>? ?? {};
       
       itensDescarte.forEach((itemName, itemData) {
-        final itemInfo = _getItemInfo(itemName, itemData['quantidade'] ?? 1);
+        // USAR MÉTODO AUXILIAR para garantir que é int
+        final quantidade = _parseQuantidade(itemData);
+        
+        final itemInfo = _getItemInfo(itemName, quantidade);
         processedItems.add({
           'type': itemInfo['name'],
-          'quantity': itemData['quantidade'] ?? 1,
+          'quantity': quantidade,
           'recyclingRate': itemInfo['recyclingRate'],
           'price': itemInfo['price'],
           'risk': itemInfo['risk'],
@@ -94,7 +96,7 @@ class DiscardReportService {
     return processedItems;
   }
 
-  // Dados reais baseados na tabela fornecida - VERSÃO CORRIGIDA
+  // Dados reais baseados na tabela fornecida
   static Map<String, dynamic> _getItemInfo(String rawName, int quantity) {
     final itemMap = {
       'laptop': {
@@ -322,43 +324,13 @@ class DiscardReportService {
         final itensDescarte = discard['itens_descarte'] as Map<String, dynamic>? ?? {};
         int totalItens = 0;
         itensDescarte.forEach((key, value) {
-          totalItens += (value['quantidade'] ?? 0) as int;
+          final quantidade = _parseQuantidade(value);
+          totalItens += quantidade; // AGORA FUNCIONA!
         });
         monthlyData[monthKey] = (monthlyData[monthKey] ?? 0) + totalItens;
       }
     }
     
     return monthlyData;
-  }
-
-  // Método para obter estatísticas resumidas
-  static Map<String, dynamic> getSummaryStats(List<Map<String, dynamic>> items) {
-    if (items.isEmpty) {
-      return {
-        'totalItems': 0,
-        'totalValue': 0.0,
-        'averageRecyclingRate': 0.0,
-        'riskDistribution': {'Baixo': 0, 'Médio': 0, 'Alto': 0},
-      };
-    }
-
-    int totalItems = 0;
-    double totalValue = 0.0;
-    double totalRecyclingRate = 0.0;
-    final riskDistribution = {'Baixo': 0, 'Médio': 0, 'Alto': 0};
-
-    for (var item in items) {
-      totalItems += item['quantity'] as int;
-      totalValue += item['price'] as double;
-      totalRecyclingRate += item['recyclingRate'] as double;
-      riskDistribution[item['risk']] = (riskDistribution[item['risk']] ?? 0) + 1;
-    }
-
-    return {
-      'totalItems': totalItems,
-      'totalValue': totalValue,
-      'averageRecyclingRate': totalRecyclingRate / items.length,
-      'riskDistribution': riskDistribution,
-    };
   }
 }

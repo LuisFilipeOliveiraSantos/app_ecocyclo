@@ -27,12 +27,10 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
         _isLoading = true;
       });
 
-      // BUSCAR O ID DA EMPRESA - você precisa implementar isso
       final companyId = await _getCompanyId();
       
       print('🏢 Buscando dados da empresa: $companyId');
       
-      // BUSCAR DADOS REAIS DO BACKEND
       final discards = await DiscardReportService.getCompanyDiscards(companyId);
       final processedItems = DiscardReportService.processDiscardsData(discards);
       final monthlyData = DiscardReportService.getLastSixMonthsData(discards);
@@ -51,7 +49,6 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
         _isLoading = false;
       });
       
-      // Mostrar erro para o usuário
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -63,7 +60,6 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
     }
   }
 
-    // ---- MÉTODO PARA PEGAR O COMPANY_ID ----
   Future<String> _getCompanyId() async {
     try {
       final companyId = await AuthService.getCompanyId();
@@ -81,6 +77,26 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
     }
   }
 
+  List<Map<String, dynamic>> _getConsolidatedItems() {
+    final Map<String, Map<String, dynamic>> consolidated = {};
+    
+    for (var item in _items) {
+      final key = item['type'];
+      if (consolidated.containsKey(key)) {
+        final existing = consolidated[key]!;
+        consolidated[key] = {
+          ...existing,
+          'quantity': (existing['quantity'] as int) + (item['quantity'] as int),
+          'price': (existing['price'] as double) + (item['price'] as double),
+        };
+      } else {
+        consolidated[key] = {...item};
+      }
+    }
+    
+    return consolidated.values.toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -95,7 +111,6 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
         child: SafeArea(
           child: Column(
             children: [
-              // ---- TOPO COM TÍTULO ----
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
@@ -121,7 +136,6 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
                 ),
               ),
               
-              // ---- CONTEÚDO ----
               Expanded(
                 child: Container(
                   width: double.infinity,
@@ -181,7 +195,7 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
               'Nenhum descarte encontrado',
               style: TextStyle(
                 fontSize: 18,
-                color: Colors.grey,
+                color: Colors.black87,
               ),
             ),
             const SizedBox(height: 8),
@@ -190,13 +204,15 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey,
+                color: Colors.black54,
               ),
             ),
           ],
         ),
       );
     }
+
+    final consolidatedItems = _getConsolidatedItems();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -208,10 +224,11 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
           ),
           const SizedBox(height: 10),
-          ..._items.map((e) => _buildItemCard(e)),
+          ...consolidatedItems.map((e) => _buildItemCard(e)),
           const SizedBox(height: 25),
           _buildBarChartSection(),
           const SizedBox(height: 25),
@@ -221,7 +238,6 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
     );
   }
 
-  // ---- CARD DO ITEM ----
   Widget _buildItemCard(Map<String, dynamic> e) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -239,26 +255,40 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
       child: ListTile(
         contentPadding: const EdgeInsets.all(12),
         leading: CircleAvatar(
-          backgroundColor: _getRiskBackgroundColor(e['risk']),
+          backgroundColor: const Color(0xFFE9F9F5), // Cor mais clara
           child: Icon(
             e['icon'] ?? Icons.devices_other,
-            color: _getRiskIconColor(e['risk']),
+            color: const Color(0xFF007C92), // Cor do ícone
           ),
         ),
         title: Text(
           '${e['type']} x${e['quantity']}',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Reciclagem: ${e['recyclingRate']}%',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 12,
-              ),
+            Row(
+              children: [
+                Icon(
+                  Icons.recycling,
+                  size: 14,
+                  color: const Color(0xFF007C92),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${e['recyclingRate']}%',
+                  style: const TextStyle(
+                    color: Colors.black54,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
+            const SizedBox(height: 2),
             Text(
               e['priceRange'] ?? 'R\$${e['price'].toStringAsFixed(2)}',
               style: TextStyle(
@@ -280,13 +310,24 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: getRiskColor(e['risk'])),
               ),
-              child: Text(
-                e['risk'],
-                style: TextStyle(
-                  color: getRiskColor(e['risk']),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 10,
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded, // Ícone padronizado para todos os riscos
+                    size: 12,
+                    color: getRiskColor(e['risk']),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    e['risk'],
+                    style: TextStyle(
+                      color: getRiskColor(e['risk']),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 4),
@@ -295,6 +336,7 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
+                color: Colors.black87,
               ),
             ),
           ],
@@ -306,7 +348,6 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
     );
   }
 
-  // ---- GRÁFICO DE BARRAS ----
   Widget _buildBarChartSection() {
     final monthlyValues = _monthlyData.values.toList();
     
@@ -314,7 +355,11 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
       children: [
         const Text(
           'Descartes do último semestre',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: TextStyle(
+            fontWeight: FontWeight.bold, 
+            fontSize: 16,
+            color: Colors.black87,
+          ),
         ),
         const SizedBox(height: 10),
         SizedBox(
@@ -334,7 +379,10 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
                           padding: const EdgeInsets.only(top: 6.0),
                           child: Text(
                             _formatMonthLabel(months[value.toInt()]),
-                            style: const TextStyle(fontSize: 12),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
                           ),
                         );
                       }
@@ -356,7 +404,6 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
     );
   }
 
-  // ---- GRÁFICO DE PIZZA ----
   Widget _buildPieChartSection(List<Map<String, dynamic>> items) {
     final Map<String, int> counts = {};
     for (var item in items) {
@@ -397,7 +444,11 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
       children: [
         const Text(
           'Tipos de itens',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: TextStyle(
+            fontWeight: FontWeight.bold, 
+            fontSize: 16,
+            color: Colors.black87,
+          ),
         ),
         const SizedBox(height: 10),
         SizedBox(
@@ -430,7 +481,13 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
                   ),
                 ),
                 const SizedBox(width: 4),
-                Text('${entry.key} (${entry.value})'),
+                Text(
+                  '${entry.key} (${entry.value})',
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 12,
+                  ),
+                ),
               ],
             );
           }).toList(),
@@ -439,45 +496,93 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
     );
   }
 
-  // ---- MÉTODOS AUXILIARES ----
-  
   void _showItemDetails(BuildContext context, Map<String, dynamic> item) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(item['icon'] ?? Icons.devices_other, color: getRiskColor(item['risk'])),
+            CircleAvatar(
+              backgroundColor: const Color(0xFFE9F9F5), // Cor mais clara
+              child: Icon(
+                item['icon'] ?? Icons.devices_other, 
+                color: const Color(0xFF007C92),
+              ),
+            ),
             const SizedBox(width: 8),
-            Text(item['type']),
+            Text(
+              item['type'],
+              style: const TextStyle(color: Colors.black87),
+            ),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Quantidade: ${item['quantity']}'),
+            Text(
+              'Quantidade: ${item['quantity']}',
+              style: const TextStyle(color: Colors.black87),
+            ),
             const SizedBox(height: 8),
-            Text('Taxa de Reciclagem: ${item['recyclingRate']}%'),
+            Row(
+              children: [
+                Icon(
+                  Icons.recycling,
+                  size: 16,
+                  color: const Color(0xFF007C92),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Taxa de Reciclagem: ${item['recyclingRate']}%',
+                  style: const TextStyle(color: Colors.black87),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
-            Text('Faixa de Valor: ${item['priceRange']}'),
+            Text(
+              'Faixa de Valor: ${item['priceRange']}',
+              style: const TextStyle(color: Colors.black87),
+            ),
             const SizedBox(height: 8),
-            Text('Nível de Risco: ${item['risk']}'),
+            Row(
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded, // Ícone padronizado
+                  size: 16,
+                  color: getRiskColor(item['risk']),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Nível de Risco: ${item['risk']}',
+                  style: const TextStyle(color: Colors.black87),
+                ),
+              ],
+            ),
             const SizedBox(height: 12),
             Text(
               'Observações:',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700]),
+              style: TextStyle(
+                fontWeight: FontWeight.bold, 
+                color: Colors.black87,
+              ),
             ),
             Text(
               item['observations'] ?? 'Sem observações adicionais.',
-              style: const TextStyle(fontSize: 12),
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.black54,
+              ),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
+            child: const Text(
+              'Fechar',
+              style: TextStyle(color: Colors.black87),
+            ),
           ),
         ],
       ),
@@ -505,6 +610,7 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
     );
   }
 
+  // Função para cores de risco (mantida)
   Color getRiskColor(String risk) {
     switch (risk) {
       case 'Baixo':
@@ -513,32 +619,6 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
         return const Color(0xFFF6C453);
       case 'Alto':
         return const Color(0xFFE75C5C);
-      default:
-        return Colors.grey;
-    }
-  }
-
-  Color _getRiskBackgroundColor(String risk) {
-    switch (risk) {
-      case 'Alto':
-        return const Color(0xFFFFE5E5);
-      case 'Médio':
-        return const Color(0xFFFFF4E5);
-      case 'Baixo':
-        return const Color(0xFFE5F7EE);
-      default:
-        return Colors.grey[100]!;
-    }
-  }
-
-  Color _getRiskIconColor(String risk) {
-    switch (risk) {
-      case 'Alto':
-        return const Color(0xFFE75C5C);
-      case 'Médio':
-        return const Color(0xFFF6C453);
-      case 'Baixo':
-        return const Color(0xFF60D39A);
       default:
         return Colors.grey;
     }

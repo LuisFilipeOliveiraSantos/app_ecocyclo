@@ -5,22 +5,35 @@ import '../config/api_config.dart';
 import '../models/disposal_stats.dart';
 
 class DisposalService {
-  // Função futura para buscar descartes
   static Future<DisposalStats> getDisposalStats() async {
-    final token = await AuthService.getToken();
-    if (token == null) return DisposalStats(inProgress: 0, finished: 0);
+    try {
+      final token = await AuthService.getToken();
+      final companyId = await AuthService.getCompanyId();
+      
+      if (token == null || companyId.isEmpty) {
+        return DisposalStats(inProgress: 0, finished: 0);
+      }
 
-    final url = Uri.parse("${ApiConfig.baseUrl}/api/v1/company/disposals/stats");
-    final response = await http.get(
-      url,
-      headers: {'Authorization': 'Bearer $token'},
-    );
+      // Busca todos os descartes concluídos
+      final url = Uri.parse("${ApiConfig.baseUrl}/api/v1/discards/company/$companyId");
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'Bearer $token'},
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return DisposalStats.fromJson(data);
-    } else {
-      // Retorna 0 caso a rota ainda não exista
+      if (response.statusCode == 200) {
+        final List<dynamic> discards = jsonDecode(response.body);
+        
+        return DisposalStats(
+          inProgress: 0, // ← Futuramente buscamos de outra API
+          finished: discards.length, // ← Já funcionando agora
+        );
+      } else {
+        return DisposalStats(inProgress: 0, finished: 0);
+      }
+
+    } catch (e) {
+      print('❌ Erro ao buscar estatísticas de descarte: $e');
       return DisposalStats(inProgress: 0, finished: 0);
     }
   }
