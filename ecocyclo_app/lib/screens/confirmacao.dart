@@ -163,19 +163,67 @@ class ConfirmacaoPage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               child: BotaoConfirmarAgendar(
                 onPressed: () async {
-                  final id_solicitante = await AuthService.getCompanyId();
-                  await DiscardService.createDiscard(
-                    idSolicitante: id_solicitante,
-                    idSolicitada: id_solicitada,
-                    geminiItens: geminiItens,
-                    dataDescarte: data_descarte,
-                    localColeta: local_coleta,
-                      );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Coleta confirmada com sucesso!'),
-                    ),
-                  );
+                  try {
+                    final id_solicitante = await AuthService.getCompanyId();
+                    
+                    // Mostrar loading
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Row(
+                          children: [
+                            CircularProgressIndicator(color: Colors.white),
+                            SizedBox(width: 12),
+                            Text('Confirmando coleta...'),
+                          ],
+                        ),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+
+                    // Criar o descarte
+                    await DiscardService.createDiscard(
+                      idSolicitante: id_solicitante,
+                      idSolicitada: id_solicitada,
+                      geminiItens: geminiItens,
+                      dataDescarte: data_descarte,
+                      localColeta: local_coleta,
+                    );
+
+                    // Fechar o snackbar de loading
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+                    // Mostrar mensagem de sucesso
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Coleta confirmada com sucesso!'),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+
+                    // Aguardar um pouco e redirecionar para relatórios
+                    await Future.delayed(const Duration(seconds: 1));
+                    
+                    // Redirecionar para tela de relatórios
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/relatorios',
+                      (route) => false, // Remove todas as telas da pilha
+                    );
+
+                  } catch (e) {
+                    // Fechar o snackbar de loading se houver erro
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    
+                    // Mostrar erro
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Erro ao confirmar coleta: $e'),
+                        backgroundColor: Colors.red,
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  }
                 },
               ),
             ),

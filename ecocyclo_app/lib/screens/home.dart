@@ -101,12 +101,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         _FeatureCard(
                           assetName: 'assets/icons/impact.svg',
                           label: 'Impactos Ambientais',
-                          onTap: () => logger.i('Impactos Ambientais clicado!'),
+                          onTap: () => Navigator.pushNamed(context, '/relatorios'),
                         ),
                         _FeatureCard(
                           assetName: 'assets/icons/collections.svg',
                           label: 'Rastrear Coletas',
-                          onTap: () => logger.i('Rastrear Coletas clicado!'),
+                          onTap: () => logger.i('Coletas clicado!'),
                         ),
                       ],
                     ),
