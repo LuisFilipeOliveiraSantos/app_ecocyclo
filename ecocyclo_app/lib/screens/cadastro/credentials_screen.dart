@@ -190,7 +190,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true, // Garante que o Scaffold se ajusta ao teclado
+      resizeToAvoidBottomInset: false, 
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(

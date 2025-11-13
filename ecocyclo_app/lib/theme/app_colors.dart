@@ -5,13 +5,29 @@ class AppColors {
   static const Color gradientLeft = Color(0xFF0C3A63);
   static const Color gradientRight = Color(0xFF00978A);
 
-  //gradiente vermelho
-  static const gradientRedLeft = Color(0xFFE44B4B);
-  static const gradientRedRight = Color(0xFFAA2222);
+  // Gradiente principal pronto para uso
+  static const LinearGradient mainGradient = LinearGradient(
+    colors: [gradientLeft, gradientRight],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
-  // Gradiente botão "Sair da conta"
+  // Gradiente vermelho (usado em botões de alerta)
+  static const Color gradientRedLeft = Color(0xFFE44B4B);
+  static const Color gradientRedRight = Color(0xFFAA2222);
+
+  // Gradiente vermelho pronto para uso (nome redGradient)
+  static const LinearGradient redGradient = LinearGradient(
+    colors: [gradientRedLeft, gradientRedRight],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  // Gradiente botão "Sair da conta" (mantive caso já use esse nome)
   static const LinearGradient logoutGradient = LinearGradient(
     colors: [Color(0xFFAA2222), Color(0xFF0C3A63)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
   );
 
   // Cores principais

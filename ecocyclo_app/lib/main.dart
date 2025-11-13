@@ -8,7 +8,7 @@ import 'screens/informativa_1.dart';
 import 'screens/informativa_2.dart';
 import 'screens/home.dart';
 import 'theme/app_theme.dart';
-import 'screens/settings.dart';
+import 'screens/profile/settings.dart';
 import "screens/cadastro/company_screen.dart";
 import "screens/cadastro/location_screen.dart";
 import "screens/cadastro/credentials_screen.dart";
@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
         '/informativa1': (context) => const Informativa1Screen(),
         '/informativa2': (context) => const Informativa2Screen(),
         '/home': (context) => const HomeScreen(),
-        '/settings': (context) => const SettingsScreen(),
+        '/settings': (context) => const ProfileScreen(),
         '/company': (context) => const CompanyScreen(),
         '/location': (context) => const LocationScreen(
               companyName: '',
