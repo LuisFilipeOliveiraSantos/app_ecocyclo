@@ -1,4 +1,3 @@
-// widgets/profile/logout_dialog.dart - Atualizado
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_colors.dart';
@@ -26,18 +25,15 @@ class LogoutDialog extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: AppColors.redGradient,
               ),
-              child: const Icon(
-                Icons.logout, 
-                color: Colors.white
-              ),
+              child: const Icon(Icons.logout, color: Colors.white),
             ),
             const SizedBox(height: 16),
             Text(
               'Sair da conta?',
               style: GoogleFonts.inter(
-                fontSize: 20, 
-                fontWeight: FontWeight.w600, 
-                color: AppColors.textPrimary
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -45,8 +41,8 @@ class LogoutDialog extends StatelessWidget {
             Text(
               'Tem certeza que deseja sair?',
               style: GoogleFonts.inter(
-                fontSize: 14, 
-                color: AppColors.textSecondary
+                fontSize: 14,
+                color: AppColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -57,18 +53,17 @@ class LogoutDialog extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(
-                        color: Colors.black.withOpacity(0.1)
-                      ),
+                      side:
+                          BorderSide(color: Colors.black.withOpacity(0.1)),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       foregroundColor: AppColors.textSecondary,
                     ),
                     child: Text(
-                      'Cancelar', 
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600)
+                      'Cancelar',
+                      style: GoogleFonts.inter(fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
@@ -81,23 +76,24 @@ class LogoutDialog extends StatelessWidget {
                     ),
                     child: ElevatedButton(
                       onPressed: () {
-                        onConfirm(); // Chama a função de confirmação
-                        Navigator.pop(context); // Fecha o dialog
+                        onConfirm();
+                        Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
                       ),
                       child: Text(
-                        'Sair', 
+                        'Sair',
                         style: GoogleFonts.inter(
-                          color: Colors.white, 
-                          fontWeight: FontWeight.w600
-                        )
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
