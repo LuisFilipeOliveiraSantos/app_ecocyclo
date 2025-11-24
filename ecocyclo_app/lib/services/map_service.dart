@@ -6,10 +6,10 @@ import 'package:latlong2/latlong.dart';
 import '../config/api_config.dart'; // Mantenha seu import original
 import '../models/disposal_point.dart';
 
-class MapRepository {
+class MapService {
   final String? token;
 
-  MapRepository(this.token);
+  MapService(this.token);
 
   Future<LatLng> getUserCompanyLocation() async {
     const fallback = LatLng(-8.0476, -34.8770); // Recife Zero Marco
@@ -82,7 +82,7 @@ class MapRepository {
   }
 
   String _buildAddressString(Map<String, dynamic> data) {
-    return [data['rua'], data['numero'], data['cidade'], data['uf']]
+    return [data['rua'], data['numero'], data['cidade'], data['uf'],data['bairro'], data['cep']]
         .where((e) => e != null).join(', ');
   }
 
