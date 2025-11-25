@@ -113,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         _FeatureCard(
                           assetName: 'assets/icons/collections.svg',
                           label: 'Rastrear Coletas',
-                          onTap: () => logger.i('Coletas clicado!'),
+                          onTap: () => Navigator.pushNamed(context, '/rastreamento'),
                         ),
                       ],
                     ),

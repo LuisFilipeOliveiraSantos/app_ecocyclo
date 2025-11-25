@@ -9,6 +9,44 @@ import '../services/discard_service.dart';
 class ConfirmacaoPage extends StatelessWidget {
   const ConfirmacaoPage({super.key});
 
+  void _showItemsDialog(BuildContext context, Map<String, int> geminiItens) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Itens para Coleta'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              if (geminiItens.isEmpty)
+                const Text('Nenhum item encontrado')
+              else
+                ...geminiItens.entries.map(
+                  (entry) => ListTile(
+                    title: Text(entry.key),
+                    trailing: Text(
+                      '${entry.value}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0066A2),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>? ?? {};
@@ -144,7 +182,7 @@ class ConfirmacaoPage extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
                     onPressed: () {
-                      // Aqui você pode redirecionar para a tela de itens
+                      _showItemsDialog(context, geminiItens);
                     },
                     icon: const Icon(Icons.arrow_outward, color: Colors.white, size: 18),
                     label: const Text(
@@ -201,13 +239,13 @@ class ConfirmacaoPage extends StatelessWidget {
                       ),
                     );
 
-                    // Aguardar um pouco e redirecionar para relatórios
+                    // Aguardar um pouco e redirecionar para rastreamento
                     await Future.delayed(const Duration(seconds: 1));
                     
-                    // Redirecionar para tela de relatórios
+                    // Redirecionar para tela de rastreamento
                     Navigator.pushNamedAndRemoveUntil(
                       context,
-                      '/relatorios',
+                      '/rastreamento',
                       (route) => false, // Remove todas as telas da pilha
                     );
 
