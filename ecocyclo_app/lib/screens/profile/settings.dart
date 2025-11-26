@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
-import '../../services/auth_service.dart';
 import 'profile_controller.dart';
 import '../../widgets/settings/profile_login_prompt.dart';
 import '../../widgets/settings/profile_editor.dart';
