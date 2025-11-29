@@ -1,4 +1,3 @@
-// lib/pages/avaliacao_page.dart
 import 'package:flutter/material.dart';
 import '../services/avaliacao_service.dart';
 import '../services/company_service.dart';
@@ -6,8 +5,13 @@ import '../services/auth_service.dart';
 
 class AvaliacaoPage extends StatefulWidget {
   final Map<String, dynamic> discard;
+  final bool isEdicao; // ✅ NOVO PARÂMETRO
   
-  const AvaliacaoPage({super.key, required this.discard});
+  const AvaliacaoPage({
+    super.key, 
+    required this.discard,
+    this.isEdicao = false, // Padrão é false (nova avaliação)
+  });
 
   @override
   State<AvaliacaoPage> createState() => _AvaliacaoPageState();
@@ -20,6 +24,7 @@ class _AvaliacaoPageState extends State<AvaliacaoPage> {
   String _empresaNome = 'Carregando...';
   String? _empresaFoto;
   String? _minhaCompanyId;
+  String? _avaliacaoExistenteUuid; // ✅ NOVO: UUID da avaliação existente
 
   @override
   void initState() {
@@ -41,10 +46,35 @@ class _AvaliacaoPageState extends State<AvaliacaoPage> {
           _empresaFoto = dadosEmpresa['company_photo_url']?.toString();
         });
       }
+
+      // ✅ SE FOR EDIÇÃO, CARREGAR DADOS EXISTENTES
+      if (widget.isEdicao) {
+        await _carregarAvaliacaoExistente();
+      }
     } catch (e) {
       setState(() {
         _empresaNome = 'Empresa Coletora';
       });
+    }
+  }
+
+  // ✅ NOVO MÉTODO: Carregar avaliação existente
+  Future<void> _carregarAvaliacaoExistente() async {
+    try {
+      final discardId = widget.discard['discard_id']?.toString();
+      if (discardId == null) return;
+
+      final avaliacaoExistente = await AvaliacaoService.buscarAvaliacaoPorDiscard(discardId);
+      
+      if (avaliacaoExistente != null) {
+        setState(() {
+          _avaliacaoExistenteUuid = avaliacaoExistente['uuid'];
+          _rating = avaliacaoExistente['score'] ?? 0;
+          _comentarioController.text = avaliacaoExistente['comment'] ?? '';
+        });
+      }
+    } catch (e) {
+      print('Erro ao carregar avaliação existente: $e');
     }
   }
 
@@ -81,9 +111,9 @@ class _AvaliacaoPageState extends State<AvaliacaoPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'Avaliar Coleta',
-          style: TextStyle(
+        title: Text(
+          widget.isEdicao ? 'Editar Avaliação' : 'Avaliar Coleta', // ✅ Título dinâmico
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -339,6 +369,8 @@ class _AvaliacaoPageState extends State<AvaliacaoPage> {
   }
 
   Widget _buildBotaoEnviar() {
+    final buttonText = widget.isEdicao ? 'Atualizar avaliação' : 'Enviar avaliação';
+    
     return SizedBox(
       width: double.infinity,
       child: Container(
@@ -367,9 +399,9 @@ class _AvaliacaoPageState extends State<AvaliacaoPage> {
             ),
             padding: const EdgeInsets.symmetric(vertical: 16),
           ),
-          child: const Text(
-            'Enviar avaliação',
-            style: TextStyle(
+          child: Text(
+            buttonText,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -399,24 +431,60 @@ class _AvaliacaoPageState extends State<AvaliacaoPage> {
       final empresaAvaliadaId = widget.discard['empresa_solicitada_id']?.toString();
       final discardId = widget.discard['discard_id']?.toString();
 
+      // 🔍 DEBUG: Verificar dados antes de enviar
+      print('🔍 DEBUG AVALIAÇÃO PAGE:');
+      print('   empresaAvaliadaId: $empresaAvaliadaId');
+      print('   discardId: $discardId');
+      print('   _minhaCompanyId: $_minhaCompanyId');
+      print('   _rating: $_rating');
+      print('   comment: ${_comentarioController.text}');
+      print('   isEdicao: ${widget.isEdicao}');
+      print('   avaliacaoExistenteUuid: $_avaliacaoExistenteUuid');
+
       if (empresaAvaliadaId == null || discardId == null) {
-        throw Exception('Dados incompletos para avaliação');
+        throw Exception('Dados incompletos para avaliação: empresa=$empresaAvaliadaId, discard=$discardId');
       }
 
-      await AvaliacaoService.criarAvaliacao(
-        companyUuid: empresaAvaliadaId, // Empresa que está sendo avaliada
-        companyAvaliadoraUuid: _minhaCompanyId!, // Minha empresa (que está avaliando)
-        discardUuid: discardId, // ID do descarte
-        score: _rating,
-        comment: _comentarioController.text,
-      );
+      // 🔍 Verificar se os UUIDs estão no formato correto
+      if (!_isValidUuid(empresaAvaliadaId)) {
+        throw Exception('UUID da empresa avaliada inválido: $empresaAvaliadaId');
+      }
+      if (!_isValidUuid(_minhaCompanyId!)) {
+        throw Exception('UUID da minha empresa inválido: $_minhaCompanyId');
+      }
+      if (!_isValidUuid(discardId)) {
+        throw Exception('UUID do descarte inválido: $discardId');
+      }
+
+      // ✅ VERIFICAR SE É EDIÇÃO OU CRIAÇÃO
+      if (widget.isEdicao && _avaliacaoExistenteUuid != null) {
+        // 🔄 MODO EDIÇÃO: Fazer UPDATE
+        await AvaliacaoService.atualizarAvaliacao(
+          ratingUuid: _avaliacaoExistenteUuid!,
+          score: _rating,
+          comment: _comentarioController.text,
+        );
+      } else {
+        // ➕ MODO CRIAÇÃO: Fazer CREATE
+        await AvaliacaoService.criarAvaliacao(
+          companyUuid: empresaAvaliadaId,
+          companyAvaliadoraUuid: _minhaCompanyId!,
+          discardUuid: discardId,
+          score: _rating,
+          comment: _comentarioController.text,
+        );
+      }
 
       if (mounted) {
+        final mensagem = widget.isEdicao 
+            ? 'Avaliação atualizada com sucesso!' 
+            : 'Avaliação enviada com sucesso!';
+            
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Avaliação enviada com sucesso!'),
+          SnackBar(
+            content: Text(mensagem),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
 
@@ -427,9 +495,9 @@ class _AvaliacaoPageState extends State<AvaliacaoPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao enviar avaliação: $e'),
+            content: Text('Erro ao ${widget.isEdicao ? 'atualizar' : 'enviar'} avaliação: $e'),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -442,6 +510,13 @@ class _AvaliacaoPageState extends State<AvaliacaoPage> {
     }
   }
 
+  // 🔍 MÉTODO AUXILIAR: Validar formato UUID
+  bool _isValidUuid(String uuid) {
+    // Formato UUID v4: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+    final uuidRegex = RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', caseSensitive: false);
+    return uuidRegex.hasMatch(uuid);
+  }
+
   String _formatDate(String dateString) {
     try {
       final date = DateTime.parse(dateString);
@@ -449,7 +524,8 @@ class _AvaliacaoPageState extends State<AvaliacaoPage> {
       final month = _getMonthName(date.month);
       final year = date.year;
       final hour = date.hour.toString().padLeft(2, '0');
-      return '$day de $month $year - ${hour}h';
+      final minute = date.minute.toString().padLeft(2, '0');
+      return '$day de $month $year - ${hour}h${minute}';
     } catch (e) {
       return 'Data inválida';
     }

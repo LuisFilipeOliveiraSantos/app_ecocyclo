@@ -1,7 +1,7 @@
-// lib/pages/rastreamento_page.dart
 import 'package:flutter/material.dart';
 import '../services/tracking_service.dart';
 import '../services/company_service.dart';
+import '../services/avaliacao_service.dart';
 import '../widgets/agendar/botao_voltar_padrao.dart';
 import 'avaliacao_page.dart'; 
 
@@ -350,12 +350,176 @@ class _RastreamentoPageState extends State<RastreamentoPage> {
     );
   }
 
-  // 🔥 MÉTODO ATUALIZADO: Agora navega para a página de avaliação
-  void _showRatingDialog(Map<String, dynamic> discard) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AvaliacaoPage(discard: discard),
+  // 🔥 MÉTODO ATUALIZADO: Agora verifica se já existe avaliação antes de navegar
+  void _showRatingDialog(Map<String, dynamic> discard) async {
+    try {
+      final discardId = discard['discard_id']?.toString();
+      if (discardId == null) return;
+
+      setState(() {
+        _isLoading = true;
+      });
+
+      // Verificar se já existe avaliação para este descarte
+      final bool jaAvaliada = await AvaliacaoService.verificarAvaliacaoExistente(discardId);
+      
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (jaAvaliada) {
+        // ✅ MOSTRAR POPUP DE CONFIRMAÇÃO
+        _showAvaliacaoExistenteDialog(discard);
+      } else {
+        // ✅ Navegar diretamente para criar nova avaliação
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AvaliacaoPage(
+              discard: discard,
+              isEdicao: false, // Nova avaliação
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao verificar avaliação: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // ✅ NOVO MÉTODO: Popup para avaliação existente
+  void _showAvaliacaoExistenteDialog(Map<String, dynamic> discard) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 🔹 Ícone de informação
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE3F2FD),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.info_outline_rounded,
+                  color: Color(0xFF1976D2),
+                  size: 32,
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // 🔹 Título
+              const Text(
+                'Empresa já avaliada',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // 🔹 Mensagem
+              const Text(
+                'Você já avaliou esta empresa para este descarte. Deseja editar sua avaliação?',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black54,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // 🔹 Botões de ação
+              Row(
+                children: [
+                  // Botão Não
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: const BorderSide(color: Color(0xFF007C92)),
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        'Não',
+                        style: TextStyle(
+                          color: Color(0xFF007C92),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(width: 12),
+                  
+                  // Botão Sim
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF007C92),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        // Navegar para edição da avaliação
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AvaliacaoPage(
+                              discard: discard,
+                              isEdicao: true, // Modo edição
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        'Sim, editar',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
