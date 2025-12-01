@@ -79,6 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
               HomeDisposalCard(
                 inProgress: disposalStats.inProgress,
                 finished: disposalStats.finished,
+                isLogged: isLogged,
               ),
             const SizedBox(height: 24),
             Expanded(
