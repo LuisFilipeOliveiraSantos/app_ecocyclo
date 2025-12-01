@@ -7,6 +7,8 @@ class Informativa1Screen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       body: Stack(
         clipBehavior: Clip.none,
@@ -25,89 +27,79 @@ class Informativa1Screen extends StatelessWidget {
             ),
           ),
 
-          // Parte branca (AGORA SEM BORDA PRETA)
+          // Parte branca
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-              height: MediaQuery.of(context).size.height * 0.78,
-              decoration: BoxDecoration(
+              height: screenHeight * 0.78,
+              decoration: const BoxDecoration(
                 color: AppColors.white,
-                borderRadius: const BorderRadius.only(
+                borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(150.0),
                   topRight: Radius.circular(150.0),
                 ),
-                // <<<<< REMOVIDA A BORDA PRETA AQUI >>>>>
-                // A linha abaixo foi removida: 
-                // border: Border.all(color: Colors.black, width: 2.0),
               ),
-              child: SingleChildScrollView(
-                child: SafeArea(
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 40.0),
                   child: Column(
                     children: [
-                      // O espaço foi ajustado para considerar a imagem maior (250)
-                      const SizedBox(height: 150), 
+                      const SizedBox(height: 150), // mantém espaçamento original
 
                       // Título
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                        child: Text(
-                          'Conecte-se com\nempresas de coleta\npersonalizadas para você',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
+                      const Text(
+                        'Conecte-se com\nempresas de coleta\npersonalizadas para você',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 40), // mantém espaçamento original
 
                       // Subtítulo
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                        child: Text(
-                          'Encontre facilmente empresas para\ndescartar ou doar seu equipamento\neletrônico.',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: AppColors.textSecondary,
-                          ),
+                      const Text(
+                        'Encontre facilmente empresas para\ndescartar ou doar seu equipamento\neletrônico.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppColors.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 60),
+                      const SizedBox(height: 60), // mantém espaçamento original
 
-                      // Indicadores de página
+                      // Indicador
                       const CustomIndicator(activeIndex: 0, total: 2),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 20), // mantém espaçamento original
 
                       // Botão "Avançar"
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                        child: SizedBox(
-                          width: 350,
-                          height: 65,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/informativa2');
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.secondary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(32.5),
-                              ),
+                      SizedBox(
+                        width: 350,
+                        height: 65,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/informativa2');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.secondary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(32.5),
                             ),
-                            child: const Text(
-                              'Avançar',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.white,
-                                fontFamily: 'Poppins',
-                              ),
+                          ),
+                          child: const Text(
+                            'Avançar',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.white,
+                              fontFamily: 'Poppins',
                             ),
                           ),
                         ),
                       ),
+
+                      const Spacer(), 
                     ],
                   ),
                 ),
@@ -115,18 +107,18 @@ class Informativa1Screen extends StatelessWidget {
             ),
           ),
 
-          // ⭐️ IMAGEM CENTRAL SEM SOMBRA E AUMENTADA ⭐️
+          // Imagem central
           Positioned(
             top: 70.0,
             left: 0,
             right: 0,
             child: Center(
               child: Container(
-                width: 250, 
-                height: 250, 
-                child: Image.asset( 
+                width: 250,
+                height: 250,
+                child: Image.asset(
                   'assets/loc.png',
-                  fit: BoxFit.contain, 
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
