@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../services/tracking_service.dart';
 import '../services/company_service.dart';
 import '../services/avaliacao_service.dart';
-import '../widgets/agendar/botao_voltar_padrao.dart';
 import 'avaliacao_page.dart'; 
 
 class RastreamentoPage extends StatefulWidget {
@@ -231,6 +230,40 @@ class _RastreamentoPageState extends State<RastreamentoPage> {
     }
   }
 
+  Future<void> _confirmDiscard(String discardId) async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      await TrackingService.confirmDiscard(discardId);
+      
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Coleta finalizada com sucesso!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      
+      // Recarregar a lista para atualizar os status
+      _loadDiscards();
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao finalizar coleta: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   void _showCancelDialog(String discardId) {
     showDialog(
       context: context,
@@ -333,6 +366,125 @@ class _RastreamentoPageState extends State<RastreamentoPage> {
                       },
                       child: const Text(
                         'Sim, cancelar',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showConfirmDialog(String discardId) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Ícone de confirmação
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E9),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_circle_outline_rounded,
+                  color: Color(0xFF4CAF50),
+                  size: 32,
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Título
+              const Text(
+                'Finalizar Coleta',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // Mensagem
+              const Text(
+                'Tem certeza que deseja finalizar esta coleta?',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black54,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Botões de ação
+              Row(
+                children: [
+                  // Botão Não
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: const BorderSide(color: Color(0xFF007C92)),
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        'Não',
+                        style: TextStyle(
+                          color: Color(0xFF007C92),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(width: 12),
+                  
+                  // Botão Sim
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4CAF50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _confirmDiscard(discardId);
+                      },
+                      child: const Text(
+                        'Sim, finalizar',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -547,8 +699,25 @@ class _RastreamentoPageState extends State<RastreamentoPage> {
                 children: [
                   Positioned(
                     left: 16,
-                    child: BotaoVoltarPadrao(
-                      onPressed: () => Navigator.pop(context),
+                    child: IconButton(
+                      onPressed: () {
+                        // Navega para a home (substituindo a pilha de navegação)
+                        Navigator.pushNamedAndRemoveUntil(
+                          context, 
+                          '/home', // ou a rota da sua home
+                          (route) => false,
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 40,
+                        minHeight: 40,
+                      ),
                     ),
                   ),
                   const Text(
@@ -804,31 +973,55 @@ class _RastreamentoPageState extends State<RastreamentoPage> {
           // 🔹 Botões de ação
           Row(
             children: [
-              // Botão Visualizar Itens (sempre visível)
-              Expanded(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF004D61),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+              // Botão condicional: Finalizar para coletas "em andamento", Visualizar itens para outras
+              if (_isInProgress(status) && status.toLowerCase() != 'em andamento')
+                // Botão Finalizar (apenas para coletas com status "em andamento")
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4CAF50), // Verde para finalizar
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    onPressed: () {
+                      _showConfirmDialog(discardId);
+                    },
+                    icon: const Icon(Icons.check_circle, color: Colors.white, size: 16),
+                    label: const Text(
+                      'Finalizar',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
                   ),
-                  onPressed: () {
-                    _showItemsDialog(itensDescarte, discardId);
-                  },
-                  icon: const Icon(Icons.visibility, color: Colors.white, size: 16),
-                  label: const Text(
-                    'Visualizar itens',
-                    style: TextStyle(color: Colors.white, fontSize: 14),
+                )
+              else
+                // Botão Visualizar Itens (para outros status)
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF004D61),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+                    onPressed: () {
+                      _showItemsDialog(itensDescarte, discardId);
+                    },
+                    icon: const Icon(Icons.visibility, color: Colors.white, size: 16),
+                    label: const Text(
+                      'Visualizar itens',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
                   ),
                 ),
-              ),
+              
               const SizedBox(width: 8),
               
-              // Botões condicionais
+              // Botões condicionais do lado direito
               if (_isInProgress(status) && status.toLowerCase() != 'em andamento')
-                // Botão Cancelar (apenas para coletas em andamento)
+                // Botão Cancelar (apenas para coletas em andamento que NÃO estão "em andamento")
                 Expanded(
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
@@ -848,7 +1041,7 @@ class _RastreamentoPageState extends State<RastreamentoPage> {
                   ),
                 )
               else if (isFinished)
-                // Botão Avaliar (apenas para coletas finalizadas - completas OU canceladas) DOURADO
+                // Botão Avaliar (apenas para coletas finalizadas)
                 Expanded(
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
@@ -859,7 +1052,7 @@ class _RastreamentoPageState extends State<RastreamentoPage> {
                       side: const BorderSide(color: Color(0xFFD4AF37)), // Dourado
                     ),
                     onPressed: () {
-                      _showRatingDialog(discard); // ✅ CORRIGIDO: Só chamar a função, não declarar
+                      _showRatingDialog(discard);
                     },
                     icon: const Icon(Icons.star, color: Color(0xFFD4AF37), size: 16),
                     label: const Text(
