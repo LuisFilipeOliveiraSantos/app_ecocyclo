@@ -12,6 +12,10 @@ class AppColors {
     end: Alignment.bottomRight,
   );
 
+
+  static const Color error = Color(0xFFE44B4B); // mesmo vermelho do gradiente
+
+
   // Gradiente vermelho (usado em botões de alerta)
   static const Color gradientRedLeft = Color(0xFFE44B4B);
   static const Color gradientRedRight = Color(0xFFAA2222);

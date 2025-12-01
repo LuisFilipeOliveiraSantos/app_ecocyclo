@@ -24,19 +24,20 @@ class _HomeScreenState extends State<HomeScreen> {
   String companyName = "Carregando...";
   DisposalStats disposalStats = DisposalStats(inProgress: 0, finished: 0);
   bool isLoadingStats = true;
+  bool isLogged = false;
 
   @override
   void initState() {
     super.initState();
     loadCompanyName();
     loadDisposalStats();
+    checkLoggedIn();
   }
 
   Future<void> loadCompanyName() async {
     final name = await AuthService.getCompanyName();
     setState(() => companyName = name);
   }
-
   Future<void> loadDisposalStats() async {
     setState(() => isLoadingStats = true);
     final stats = await DisposalService.getDisposalStats();
@@ -44,6 +45,11 @@ class _HomeScreenState extends State<HomeScreen> {
       disposalStats = stats;
       isLoadingStats = false;
     });
+  }
+
+  Future<void> checkLoggedIn() async {
+    final logged = await AuthService.isLoggedIn();
+    setState(() => isLogged = logged);
   }
 
   void _navigateToMap(BuildContext context) {
@@ -106,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         _FeatureCard(
                           assetName: 'assets/icons/collections.svg',
                           label: 'Rastrear Coletas',
-                          onTap: () => logger.i('Coletas clicado!'),
+                          onTap: () => Navigator.pushNamed(context, '/rastreamento'),
                         ),
                       ],
                     ),

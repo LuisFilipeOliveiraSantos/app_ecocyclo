@@ -551,7 +551,8 @@ class _MapScreenState extends State<MapScreen> {
   // 10. ATUALIZADO: build() agora inclui o onMapReady
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)!.settings.arguments as Map<String, int>;
+  final args = ModalRoute.of(context)?.settings.arguments as Map<String, int>? ?? {};
+    
     final activeFilterChips = _selectedFilters
         .where((name) => _filterDetails.containsKey(name))
         .map((name) {
@@ -844,6 +845,7 @@ class _MapScreenState extends State<MapScreen> {
                                       style: const TextStyle(fontSize: 12, color: Colors.grey),
                                     ),
                                     const SizedBox(height: 6),
+                                  if (args.isNotEmpty)
                                     TextButton(
                                       onPressed: () {
                                         if (_selectedEnterprise != null) {

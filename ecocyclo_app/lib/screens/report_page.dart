@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../services/discard_report_service.dart';
 import '../services/auth_service.dart';
+import '/screens/item_detail_screen.dart';
 
 class ReportPageStyled extends StatefulWidget {
   const ReportPageStyled({super.key});
@@ -31,6 +32,10 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
       
       print('🏢 Buscando dados da empresa: $companyId');
       
+      // ✅ AGORA: Processar descartes e criar relatório ao entrar na tela
+      await DiscardReportService.processDiscardsForReport(companyId);
+      
+      // Buscar dados atualizados para exibir
       final discards = await DiscardReportService.getCompanyDiscards(companyId);
       final processedItems = DiscardReportService.processDiscardsData(discards);
       final monthlyData = DiscardReportService.getLastSixMonthsData(discards);
@@ -103,7 +108,7 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF007C92), Color(0xFF003E4F)],
+            colors: [Color(0xFF00B894), Color(0xFF0066A2)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -111,26 +116,41 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
         child: SafeArea(
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
+              // 🔹 CABEÇALHO COM DEGRADÊ - ATUALIZADO
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF00B894), Color(0xFF0066A2)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
                   children: [
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    Positioned(
+                      left: 16,
+                      child: IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      ),
                     ),
                     const Text(
                       'Relatórios',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: _loadDiscardsData,
-                      icon: const Icon(Icons.refresh, color: Colors.white),
+                    Positioned(
+                      right: 16,
+                      child: IconButton(
+                        onPressed: _loadDiscardsData,
+                        icon: const Icon(Icons.refresh, color: Colors.white),
+                      ),
                     ),
                   ],
                 ),
@@ -497,94 +517,10 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
   }
 
   void _showItemDetails(BuildContext context, Map<String, dynamic> item) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: const Color(0xFFE9F9F5), // Cor mais clara
-              child: Icon(
-                item['icon'] ?? Icons.devices_other, 
-                color: const Color(0xFF007C92),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              item['type'],
-              style: const TextStyle(color: Colors.black87),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Quantidade: ${item['quantity']}',
-              style: const TextStyle(color: Colors.black87),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(
-                  Icons.recycling,
-                  size: 16,
-                  color: const Color(0xFF007C92),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'Taxa de Reciclagem: ${item['recyclingRate']}%',
-                  style: const TextStyle(color: Colors.black87),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Faixa de Valor: ${item['priceRange']}',
-              style: const TextStyle(color: Colors.black87),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(
-                  Icons.warning_amber_rounded, // Ícone padronizado
-                  size: 16,
-                  color: getRiskColor(item['risk']),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'Nível de Risco: ${item['risk']}',
-                  style: const TextStyle(color: Colors.black87),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Observações:',
-              style: TextStyle(
-                fontWeight: FontWeight.bold, 
-                color: Colors.black87,
-              ),
-            ),
-            Text(
-              item['observations'] ?? 'Sem observações adicionais.',
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.black54,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Fechar',
-              style: TextStyle(color: Colors.black87),
-            ),
-          ),
-        ],
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ItemDetailScreen(item: item),
       ),
     );
   }

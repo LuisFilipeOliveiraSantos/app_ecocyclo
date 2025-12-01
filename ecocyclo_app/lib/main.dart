@@ -15,7 +15,8 @@ import "screens/cadastro/credentials_screen.dart";
 import 'screens/agendar_descarte.dart';
 import 'screens/confirmacao.dart';
 import 'screens/camera_page.dart';
-import 'screens/report_page.dart'; // Esta é sua tela atualizada
+import 'screens/report_page.dart'; 
+import 'screens/rastreamento_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -66,6 +67,7 @@ class MyApp extends StatelessWidget {
         '/camera': (context) => const CameraPage(),
         '/mapa': (context) => const MapScreen(),
         '/relatorios': (context) => const ReportPageStyled(),
+        '/rastreamento': (context) => const RastreamentoPage(),
       },
     );
   }

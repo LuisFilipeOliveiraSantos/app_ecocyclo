@@ -17,7 +17,7 @@ class ProfileEditor extends StatelessWidget {
   void _logout(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) => LogoutDialog(onConfirm: controller.logout),
+      builder: (_) => LogoutDialog(onConfirm: () => controller.logout(context)),
     );
   }
 
