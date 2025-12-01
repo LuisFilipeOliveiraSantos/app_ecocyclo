@@ -172,6 +172,7 @@ class _MapScreenState extends State<MapScreen> {
   final PopupController _popupLayerController = PopupController();
 
   List<DisposalPoint> enterprisesLocations = [];
+  bool _showNoCompaniesWarning = false; // NOVO: Controla a exibição do aviso
 
   final Map<String, Color> _filterColors = {
     'Reciclagem': AppColors.secondary,
@@ -246,17 +247,22 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  // 4. ATUALIZADO: Foca na orquestração e um único setState
+  // NOVO: Método para verificar se há empresas e mostrar aviso
+  void _checkCompaniesAvailability() {
+    final filteredEnterprises = _getFilteredEnterprises().where((e) => e.location != null).toList();
+    
+    setState(() {
+      _showNoCompaniesWarning = filteredEnterprises.isEmpty;
+    });
+  }
+
+  // ATUALIZADO: Inclui verificação de empresas
   Future<void> _initializeMap() async {
-    // Não precisa mais do `finally` aqui, pois o setState final fará o trabalho
     setState(() => _isLoading = true);
     
     try {
-      // 1. Obter localização da empresa (AGORA RETORNA LatLng)
       final userLocation = await _getUserCompanyLocation();
-
       final companies = await _getCompaniesFromAPI();
-
       final calculatedCompanies = _calculateDistances(userLocation, companies);
 
       setState(() {
@@ -266,166 +272,17 @@ class _MapScreenState extends State<MapScreen> {
       });
 
       _createMarkers();
-
-      
+      _checkCompaniesAvailability(); // NOVO: Verifica disponibilidade após criar marcadores
 
     } catch (e) {
       _showError('Erro ao inicializar mapa: $e');
       if(mounted) {
-        setState(() => _isLoading = false); // Garante que o loading saia em caso de erro
+        setState(() => _isLoading = false);
       }
     }
   }
 
-  // 5. ATUALIZADO: Agora retorna Future<LatLng> e não usa setState
-  Future<LatLng> _getUserCompanyLocation() async {
-    LatLng fallbackLocation = LatLng(-8.0476, -34.8770); 
-
-    try {
-      final response = await http.get(
-        Uri.parse(ApiConstants.companyMe), // USA CONSTANTE
-        headers: {
-          'Authorization': 'Bearer $_token',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        if (data['latitude'] != null && data['longitude'] != null) {
-          final double lat = (data['latitude'] is String)
-              ? double.parse(data['latitude'])
-              : (data['latitude'] as num).toDouble();
-          final double lng = (data['longitude'] is String)
-              ? double.parse(data['longitude'])
-              : (data['longitude'] as num).toDouble();
-
-          print('Localização da empresa obtida da API: $lat, $lng');
-          return LatLng(lat, lng); // RETORNA O VALOR
-        } else {
-          final address = _buildAddressFromCompanyData(data);
-          if (address.isNotEmpty) {
-            final location = await _getLatLngFromAddress(address);
-            if (location != null) {
-              print('Localização obtida via geocoding: $location');
-              return location; // RETORNA O VALOR
-            }
-          }
-        }
-      } else {
-        throw Exception(
-            'Erro ao buscar informações da empresa (status ${response.statusCode})');
-      }
-    } catch (e) {
-      print('❌ Erro ao obter localização da empresa do usuário: $e');
-    }
-    return fallbackLocation; 
-  }
-
-  // Método auxiliar (Sem alterações)
-  String _buildAddressFromCompanyData(Map<String, dynamic> data) {
-    final parts = <String>[];
-    if (data['rua'] != null) parts.add(data['rua']);
-    if (data['numero'] != null) parts.add(data['numero']);
-    if (data['bairro'] != null) parts.add(data['bairro']);
-    if (data['cidade'] != null) parts.add(data['cidade']);
-    if (data['uf'] != null) parts.add(data['uf']);
-    if (data['cep'] != null) parts.add(data['cep']);
-    return parts.join(', ');
-  }
-
-  // 6. ATUALIZADO: Agora retorna Future<List<DisposalPoint>> e não usa setState
-  Future<List<DisposalPoint>> _getCompaniesFromAPI() async {
-    try {
-      final response = await http.get(
-        Uri.parse(ApiConstants.mapCollectors), // USA CONSTANTE
-        headers: {
-          'Authorization': 'Bearer $_token',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        return data.map((item) => DisposalPoint.fromJson(item)).toList();
-      } else {
-        throw Exception('Erro ao carregar empresas: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Erro ao buscar empresas da API: $e');
-      return _loadFallbackData(); 
-    }
-  }
-
-  // Converter endereço em coordenadas (Sem alterações)
-  Future<LatLng?> _getLatLngFromAddress(String address) async {
-    if (address.isEmpty) return null;
-    try {
-      List<Location> locations = await locationFromAddress(address);
-      if (locations.isNotEmpty) {
-        Location location = locations.first;
-        return LatLng(location.latitude, location.longitude);
-      }
-    } catch (e) {
-      print("Erro ao converter endereço '$address': $e");
-    }
-    return null;
-  }
-
-  // 7. ATUALIZADO: Recebe parâmetros e retorna a lista processada
-  List<DisposalPoint> _calculateDistances(
-      LatLng userLocation, List<DisposalPoint> companies) {
-    for (var enterprise in companies) {
-      if (enterprise.location != null) {
-        final distanceInMeters = Geolocator.distanceBetween(
-          userLocation.latitude,
-          userLocation.longitude,
-          enterprise.location!.latitude,
-          enterprise.location!.longitude,
-        );
-        enterprise.distance = distanceInMeters / 1000;
-      }
-    }
-    companies.sort((a, b) {
-      if (a.distance == null) return 1;
-      if (b.distance == null) return -1;
-      return a.distance!.compareTo(b.distance!);
-    });
-    return companies; 
-  }
-
-  // 8. ATUALIZADO: Apenas retorna a lista de fallback
-  List<DisposalPoint> _loadFallbackData() {
-    return [
-      DisposalPoint(
-        id: '1',
-        name: 'RecyclaByte',
-        company_description:
-            'Especializada na coleta, triagem e reaproveitamento de resíduos tecnológicos.',
-        location: LatLng(-8.0476, -34.8770),
-        categories: ['Reciclagem'],
-        address: 'Rua Aurora, 123 - Boa Vista',
-        phone: '(81) 3333-4444',
-        rating: 4.98,
-        logoPath: 'assets/icons/reciclagem.svg',
-      ),
-      DisposalPoint(
-        id: '2',
-        name: 'Tech Solidário',
-        company_description:
-            'ONG que recebe doações de equipamentos eletrônicos.',
-        location: LatLng(-8.0556, -34.8810),
-        categories: ['Doação'],
-        address: 'Av. Conde da Boa Vista, 456',
-        phone: '(81) 9999-8888',
-        rating: 4.85,
-        logoPath: 'assets/icons/doacao.svg',
-      ),
-    ];
-  }
-
-  // _createMarkers (Sem alterações)
+  // ATUALIZADO: Inclui verificação de empresas
   void _createMarkers() {
     setState(() {
       _markers.clear();
@@ -472,7 +329,7 @@ class _MapScreenState extends State<MapScreen> {
           child: GestureDetector(
             onTap: () {
               setState(() {
-                _selectedEnterprise = enterprise; // ✅ Atualiza a empresa selecionada
+                _selectedEnterprise = enterprise;
               });
               _popupLayerController.togglePopup(marker);
             },
@@ -481,19 +338,161 @@ class _MapScreenState extends State<MapScreen> {
         );
         _markers.add(marker);
       }
+
+      // NOVO: Verifica se há empresas após criar os marcadores
+      _checkCompaniesAvailability();
     });
   }
 
-  // 9. ATUALIZADO: Lógica de ícone simplificada para reusar _getCategoryIcon
+  Future<LatLng> _getUserCompanyLocation() async {
+    LatLng fallbackLocation = LatLng(-8.0476, -34.8770); 
+
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConstants.companyMe),
+        headers: {
+          'Authorization': 'Bearer $_token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data['latitude'] != null && data['longitude'] != null) {
+          final double lat = (data['latitude'] is String)
+              ? double.parse(data['latitude'])
+              : (data['latitude'] as num).toDouble();
+          final double lng = (data['longitude'] is String)
+              ? double.parse(data['longitude'])
+              : (data['longitude'] as num).toDouble();
+
+          print('Localização da empresa obtida da API: $lat, $lng');
+          return LatLng(lat, lng);
+        } else {
+          final address = _buildAddressFromCompanyData(data);
+          if (address.isNotEmpty) {
+            final location = await _getLatLngFromAddress(address);
+            if (location != null) {
+              print('Localização obtida via geocoding: $location');
+              return location;
+            }
+          }
+        }
+      } else {
+        throw Exception(
+            'Erro ao buscar informações da empresa (status ${response.statusCode})');
+      }
+    } catch (e) {
+      print('❌ Erro ao obter localização da empresa do usuário: $e');
+    }
+    return fallbackLocation; 
+  }
+
+  String _buildAddressFromCompanyData(Map<String, dynamic> data) {
+    final parts = <String>[];
+    if (data['rua'] != null) parts.add(data['rua']);
+    if (data['numero'] != null) parts.add(data['numero']);
+    if (data['bairro'] != null) parts.add(data['bairro']);
+    if (data['cidade'] != null) parts.add(data['cidade']);
+    if (data['uf'] != null) parts.add(data['uf']);
+    if (data['cep'] != null) parts.add(data['cep']);
+    return parts.join(', ');
+  }
+
+  Future<List<DisposalPoint>> _getCompaniesFromAPI() async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConstants.mapCollectors),
+        headers: {
+          'Authorization': 'Bearer $_token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((item) => DisposalPoint.fromJson(item)).toList();
+      } else {
+        throw Exception('Erro ao carregar empresas: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erro ao buscar empresas da API: $e');
+      return _loadFallbackData(); 
+    }
+  }
+
+  Future<LatLng?> _getLatLngFromAddress(String address) async {
+    if (address.isEmpty) return null;
+    try {
+      List<Location> locations = await locationFromAddress(address);
+      if (locations.isNotEmpty) {
+        Location location = locations.first;
+        return LatLng(location.latitude, location.longitude);
+      }
+    } catch (e) {
+      print("Erro ao converter endereço '$address': $e");
+    }
+    return null;
+  }
+
+  List<DisposalPoint> _calculateDistances(
+      LatLng userLocation, List<DisposalPoint> companies) {
+    for (var enterprise in companies) {
+      if (enterprise.location != null) {
+        final distanceInMeters = Geolocator.distanceBetween(
+          userLocation.latitude,
+          userLocation.longitude,
+          enterprise.location!.latitude,
+          enterprise.location!.longitude,
+        );
+        enterprise.distance = distanceInMeters / 1000;
+      }
+    }
+    companies.sort((a, b) {
+      if (a.distance == null) return 1;
+      if (b.distance == null) return -1;
+      return a.distance!.compareTo(b.distance!);
+    });
+    return companies; 
+  }
+
+  List<DisposalPoint> _loadFallbackData() {
+    return [
+      DisposalPoint(
+        id: '1',
+        name: 'RecyclaByte',
+        company_description:
+            'Especializada na coleta, triagem e reaproveitamento de resíduos tecnológicos.',
+        location: LatLng(-8.0476, -34.8770),
+        categories: ['Reciclagem'],
+        address: 'Rua Aurora, 123 - Boa Vista',
+        phone: '(81) 3333-4444',
+        rating: 4.98,
+        logoPath: 'assets/icons/reciclagem.svg',
+      ),
+      DisposalPoint(
+        id: '2',
+        name: 'Tech Solidário',
+        company_description:
+            'ONG que recebe doações de equipamentos eletrônicos.',
+        location: LatLng(-8.0556, -34.8810),
+        categories: ['Doação'],
+        address: 'Av. Conde da Boa Vista, 456',
+        phone: '(81) 9999-8888',
+        rating: 4.85,
+        logoPath: 'assets/icons/doacao.svg',
+      ),
+    ];
+  }
+
   Widget _buildCustomMarker(DisposalPoint enterprise, bool isSelected) {
     Color backgroundColor = AppColors.secondary;
-    IconData iconData = Icons.business; // Padrão
+    IconData iconData = Icons.business;
 
     if (enterprise.categories.isNotEmpty) {
       final category = enterprise.categories.first;
       backgroundColor = _filterColors[category] ?? AppColors.secondary;
-      
-      // REUTILIZA O MÉTODO JÁ EXISTENTE
       iconData = _getCategoryIcon(category);
     }
 
@@ -520,7 +519,6 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  // _getFilteredEnterprises (Sem alterações)
   List<DisposalPoint> _getFilteredEnterprises() {
     if (_selectedFilters.isEmpty) {
       return enterprisesLocations;
@@ -530,7 +528,6 @@ class _MapScreenState extends State<MapScreen> {
     }).toList();
   }
 
-  // _showError (Sem alterações)
   void _showError(String message) {
     if (!mounted) return;
     showDialog(
@@ -548,10 +545,74 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  // 10. ATUALIZADO: build() agora inclui o onMapReady
+  // NOVO: Widget para o aviso de nenhuma empresa encontrada
+  Widget _buildNoCompaniesWarning() {
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 300),
+      top: _showNoCompaniesWarning ? 100 : -100,
+      left: 16,
+      right: 16,
+      child: Material(
+        elevation: 8,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.orange[50],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.orange.shade200),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.orange[700],
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Nenhuma empresa encontrada',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange[800],
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _selectedFilters.isEmpty
+                          ? 'Não há empresas coletoras próximas à sua localização.'
+                          : 'Não há empresas com os filtros selecionados próximas à sua localização.',
+                      style: TextStyle(
+                        color: Colors.orange[700],
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.close, color: Colors.orange[700], size: 20),
+                onPressed: () {
+                  setState(() {
+                    _showNoCompaniesWarning = false;
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-  final args = ModalRoute.of(context)?.settings.arguments as Map<String, int>? ?? {};
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, int>? ?? {};
     
     final activeFilterChips = _selectedFilters
         .where((name) => _filterDetails.containsKey(name))
@@ -613,7 +674,7 @@ class _MapScreenState extends State<MapScreen> {
                     initialZoom: 13.0,
                     minZoom: 10.0,
                     maxZoom: 18.0,
-                    onMapReady: _onMapReady, // <-- CORREÇÃO PRINCIPAL DO ERRO
+                    onMapReady: _onMapReady,
                   ),
                   children: [
                     TileLayer(
@@ -924,7 +985,10 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
 
-          // DRAGGABLE SHEET (mantido igual)
+          // NOVO: AVISO DE NENHUMA EMPRESA ENCONTRADA
+          _buildNoCompaniesWarning(),
+
+          // DRAGGABLE SHEET
           DraggableScrollableSheet(
             initialChildSize: 0.15,
             minChildSize: 0.15,
