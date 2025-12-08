@@ -14,7 +14,7 @@ class DisposalService {
         return DisposalStats(inProgress: 0, finished: 0);
       }
 
-      // Busca todos os descartes concluídos
+      // Busca todos os descartes da empresa
       final url = Uri.parse("${ApiConfig.baseUrl}/api/v1/discards/company/$companyId");
       final response = await http.get(
         url,
@@ -24,11 +24,29 @@ class DisposalService {
       if (response.statusCode == 200) {
         final List<dynamic> discards = jsonDecode(response.body);
         
+        // Calcula as estatísticas baseadas nos status
+        int inProgressCount = 0;
+        int finishedCount = 0;
+
+        for (var discard in discards) {
+          final status = discard['status']?.toString().toLowerCase() ?? '';
+          
+          // Verifica se está em andamento
+          if (status == 'pendente' || status == 'confirmado' || status == 'em andamento') {
+            inProgressCount++;
+          } 
+          // Verifica se está finalizado
+          else if (status == 'completo' || status == 'cancelado') {
+            finishedCount++;
+          }
+        }
+
         return DisposalStats(
-          inProgress: 0, // ← Futuramente buscamos de outra API
-          finished: discards.length, // ← Já funcionando agora
+          inProgress: inProgressCount,
+          finished: finishedCount,
         );
       } else {
+        print('❌ Erro na API: ${response.statusCode}');
         return DisposalStats(inProgress: 0, finished: 0);
       }
 

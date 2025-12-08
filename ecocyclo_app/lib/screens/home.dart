@@ -7,8 +7,8 @@ import '../widgets/home/home_header.dart';
 import '../widgets/home/home_disposal_card.dart';
 import '../widgets/custom_bottom_navigation_bar.dart';
 import '../services/auth_service.dart';
-import '../services/disposal_service.dart'; // futuro serviço para descartes
-import '../models/disposal_stats.dart'; // modelo para descartes
+import '../services/disposal_service.dart';
+import '../models/disposal_stats.dart';
 import '/screens/map_screen.dart';
 
 final logger = Logger();
@@ -40,7 +40,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
   Future<void> loadDisposalStats() async {
     setState(() => isLoadingStats = true);
-    // Aqui você chamaria o backend, mas atualmente devolve valores mock
     final stats = await DisposalService.getDisposalStats();
     setState(() {
       disposalStats = stats;
@@ -68,25 +67,26 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             HomeHeader(
-              companyName: companyName, // nome dinâmico
+              companyName: companyName,
               onProfilePressed: () {
                 Navigator.pushNamed(context, '/settings');
               },
             ),
+            const SizedBox(height: 24),
+            if (isLoadingStats)
+              const CircularProgressIndicator()
+            else
+              HomeDisposalCard(
+                inProgress: disposalStats.inProgress,
+                finished: disposalStats.finished,
+                isLogged: isLogged,
+              ),
+            const SizedBox(height: 24),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0), 
                 child: Column(
                   children: [
-                    const SizedBox(height: 24),
-                    isLoadingStats
-                        ? const CircularProgressIndicator()
-                        : HomeDisposalCard(
-                            inProgress: disposalStats.inProgress,
-                            finished: disposalStats.finished,
-                            isLogged: isLogged,
-                          ),
-                    const SizedBox(height: 24),
                     GridView.count(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -113,18 +113,20 @@ class _HomeScreenState extends State<HomeScreen> {
                         _FeatureCard(
                           assetName: 'assets/icons/collections.svg',
                           label: 'Rastrear Coletas',
-                          onTap: () => logger.i('Coletas clicado!'),
+                          onTap: () => Navigator.pushNamed(context, '/rastreamento'),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const Spacer(),
                   ],
                 ),
               ),
             ),
+
             CustomBottomNavigationBar(
               onMapTap: () => _navigateToMap(context),
             ),
+            const SizedBox(height: 12), // Pequeno padding inferior
           ],
         ),
       ),

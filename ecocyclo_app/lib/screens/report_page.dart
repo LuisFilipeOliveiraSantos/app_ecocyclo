@@ -108,7 +108,7 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF007C92), Color(0xFF003E4F)],
+            colors: [Color(0xFF00B894), Color(0xFF0066A2)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -116,26 +116,41 @@ class _ReportPageStyledState extends State<ReportPageStyled> {
         child: SafeArea(
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
+              // 🔹 CABEÇALHO COM DEGRADÊ - ATUALIZADO
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF00B894), Color(0xFF0066A2)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
                   children: [
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    Positioned(
+                      left: 16,
+                      child: IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      ),
                     ),
                     const Text(
                       'Relatórios',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: _loadDiscardsData,
-                      icon: const Icon(Icons.refresh, color: Colors.white),
+                    Positioned(
+                      right: 16,
+                      child: IconButton(
+                        onPressed: _loadDiscardsData,
+                        icon: const Icon(Icons.refresh, color: Colors.white),
+                      ),
                     ),
                   ],
                 ),

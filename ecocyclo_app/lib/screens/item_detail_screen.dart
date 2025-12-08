@@ -11,7 +11,7 @@ class ItemDetailScreen extends StatelessWidget {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF007C92), Color(0xFF003E4F)],
+            colors: [Color(0xFF00B894), Color(0xFF0066A2)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -19,24 +19,33 @@ class ItemDetailScreen extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
-              // Cabeçalho
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
+              // 🔹 CABEÇALHO COM DEGRADÊ - ATUALIZADO
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF00B894), Color(0xFF0066A2)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
                   children: [
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    Positioned(
+                      left: 16,
+                      child: IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        item['type'],
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    Text(
+                      item['type'],
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -95,14 +104,14 @@ class ItemDetailScreen extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF007C92), Color(0xFF003E4F)],
+          colors: [Color(0xFF00B894), Color(0xFF0066A2)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF007C92).withOpacity(0.3),
+            color: const Color(0xFF0066A2).withOpacity(0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -206,14 +215,14 @@ class ItemDetailScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF60D39A), Color(0xFF007C92)],
+                    colors: [Color(0xFF00B894), Color(0xFF0066A2)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF60D39A).withOpacity(0.3),
+                      color: const Color(0xFF0066A2).withOpacity(0.3),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -303,7 +312,11 @@ class ItemDetailScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF007C92),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF00B894), Color(0xFF0066A2)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(

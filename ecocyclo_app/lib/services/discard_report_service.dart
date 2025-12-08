@@ -29,13 +29,27 @@ class DiscardReportService {
         final List<dynamic> data = jsonDecode(response.body);
         print('✅ Encontrados ${data.length} descartes reais!');
         
+        // 🔥 FILTRAR DESCARTES CANCELADOS - NOVA LÓGICA
+        final filteredData = data.where((discard) {
+          final status = discard['status']?.toString().toLowerCase() ?? '';
+          final isCanceled = status == 'cancelado';
+          
+          if (isCanceled) {
+            print('🚫 Descarte ${discard['discard_id']} filtrado (status: $status)');
+          }
+          
+          return !isCanceled;
+        }).toList();
+        
+        print('📊 Após filtro: ${filteredData.length} descartes válidos');
+        
         // Carregar dados dos itens do backend se ainda não estiverem em cache
         if (_cachedItemsData == null) {
           _cachedItemsData = await ItemReferenceService.getAvailableItems();
           print('💾 Dados em cache: ${_cachedItemsData != null}');
         }
         
-        return data;
+        return filteredData;
       } else {
         print('❌ Erro ${response.statusCode}: ${response.body}');
         throw Exception('Falha ao carregar descartes: ${response.statusCode}');
@@ -49,7 +63,7 @@ class DiscardReportService {
   // Processar descartes para criar/atualizar relatório
   static Future<Map<String, dynamic>> processDiscardsForReport(String companyId) async {
     try {
-      // Buscar descartes da empresa
+      // Buscar descartes da empresa (já filtrados)
       final discards = await getCompanyDiscards(companyId);
       
       // Processar itens para o formato do relatório
@@ -107,6 +121,14 @@ class DiscardReportService {
     }
     
     for (var discard in discards) {
+      final status = discard['status']?.toString().toLowerCase() ?? '';
+      
+      // 🔥 GARANTIR QUE DESCARTES CANCELADOS NÃO SEJAM PROCESSADOS
+      if (status == 'cancelado') {
+        print('🚫 Pulando descarte cancelado: ${discard['discard_id']}');
+        continue;
+      }
+      
       final itensDescarte = discard['itens_descarte'] as Map<String, dynamic>? ?? {};
       
       itensDescarte.forEach((itemName, itemData) {
@@ -272,8 +294,15 @@ class DiscardReportService {
       monthlyData[monthKey] = 0;
     }
     
-    // Contar descartes por mês
+    // Contar descartes por mês (apenas não cancelados)
     for (var discard in discards) {
+      final status = discard['status']?.toString().toLowerCase() ?? '';
+      
+      // 🔥 FILTRAR DESCARTES CANCELADOS NO GRÁFICO TAMBÉM
+      if (status == 'cancelado') {
+        continue;
+      }
+      
       final discardDate = DateTime.parse(discard['data_descarte']);
       final monthKey = '${discardDate.month}/${discardDate.year}';
       
