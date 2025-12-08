@@ -86,7 +86,7 @@ class _CidadeDropdownState extends State<CidadeDropdown> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: DropdownButtonFormField<String>(
-          value: _selectedValue,
+          initialValue: _selectedValue,
           onChanged: widget.uf == null || widget.uf!.isEmpty ? null : (String? newValue) {
             setState(() {
               _selectedValue = newValue;
@@ -130,7 +130,7 @@ class _CidadeDropdownState extends State<CidadeDropdown> {
                             ),
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
           style: GoogleFonts.poppins(
             fontSize: 16,
