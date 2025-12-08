@@ -20,8 +20,8 @@ class BotaoConfirmarAgendar extends StatelessWidget {
             ),
             backgroundColor: Colors.transparent,
           ).copyWith(
-            backgroundColor: MaterialStateProperty.all(Colors.transparent),
-            elevation: MaterialStateProperty.all(0),
+            backgroundColor: WidgetStateProperty.all(Colors.transparent),
+            elevation: WidgetStateProperty.all(0),
           ),
           onPressed: onPressed,
           child: Ink(

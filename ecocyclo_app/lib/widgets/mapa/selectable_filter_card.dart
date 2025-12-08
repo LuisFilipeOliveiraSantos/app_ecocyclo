@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../theme/app_colors.dart'; // Ajuste o caminho conforme sua estrutura real
-import '../../../screens/map_screen.dart'; // Para a classe FilterDetails
+import '../../models/filter_details.dart';
 
 /// Widget para exibir um card de filtro clicável e selecionável (na lista detalhada).
 class SelectableFilterCard extends StatelessWidget {

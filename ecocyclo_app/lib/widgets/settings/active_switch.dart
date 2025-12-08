@@ -36,7 +36,7 @@ class ActiveSwitch extends StatelessWidget {
           Switch(
             value: isActive,
             onChanged: onChanged,
-            activeColor: AppColors.secondary,
+            activeThumbColor: AppColors.secondary,
           ),
         ],
       ),
