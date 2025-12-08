@@ -15,10 +15,10 @@ class ConfirmacaoPage extends StatelessWidget {
     final empresa = args['empresa'] ?? {};
     final data = args['data'] ?? 'Não definida';
     final hora = args['hora'] ?? 'Não definida';
-    final id_solicitada = empresa['id_solicitada'];
+    final idSolicitada = empresa['id_solicitada'];
     final geminiItens = empresa['geminiItens'] ?? {};
-    final data_descarte = ConfirmacaoService.combinarDataHora(data, hora);
-    final local_coleta = empresa['endereco'];
+    final dataDescarte = ConfirmacaoService.combinarDataHora(data, hora);
+    final localColeta = empresa['endereco'];
    
 
     return Scaffold(
@@ -164,7 +164,7 @@ class ConfirmacaoPage extends StatelessWidget {
               child: BotaoConfirmarAgendar(
                 onPressed: () async {
                   try {
-                    final id_solicitante = await AuthService.getCompanyId();
+                    final idSolicitante = await AuthService.getCompanyId();
                     
                     // Mostrar loading
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -182,11 +182,11 @@ class ConfirmacaoPage extends StatelessWidget {
 
                     // Criar o descarte
                     await DiscardService.createDiscard(
-                      idSolicitante: id_solicitante,
-                      idSolicitada: id_solicitada,
+                      idSolicitante: idSolicitante,
+                      idSolicitada: idSolicitada,
                       geminiItens: geminiItens,
-                      dataDescarte: data_descarte,
-                      localColeta: local_coleta,
+                      dataDescarte: dataDescarte,
+                      localColeta: localColeta,
                     );
 
                     // Fechar o snackbar de loading

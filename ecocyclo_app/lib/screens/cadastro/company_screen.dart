@@ -21,7 +21,7 @@ class _CompanyScreenState extends State<CompanyScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   String? _selectedCompanyType;
-  List<String> _selectedTags = [];
+  final List<String> _selectedTags = [];
   final List<String> _availableTags = ["venda", "doacao", "marketplace", "reuso"];
 
 

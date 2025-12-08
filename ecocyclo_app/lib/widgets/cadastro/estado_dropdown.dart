@@ -62,7 +62,7 @@ class _EstadoDropdownState extends State<EstadoDropdown> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: DropdownButtonFormField<String>(
-          value: _selectedValue,
+          initialValue: _selectedValue,
           onChanged: (String? newValue) {
             setState(() {
               _selectedValue = newValue;
@@ -97,7 +97,7 @@ class _EstadoDropdownState extends State<EstadoDropdown> {
                         ),
                       ),
                     );
-                  }).toList(),
+                  }),
                 ],
           style: GoogleFonts.poppins(
             fontSize: 16,

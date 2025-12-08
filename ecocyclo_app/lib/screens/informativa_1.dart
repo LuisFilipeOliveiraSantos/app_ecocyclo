@@ -121,7 +121,7 @@ class Informativa1Screen extends StatelessWidget {
             left: 0,
             right: 0,
             child: Center(
-              child: Container(
+              child: SizedBox(
                 width: 250, 
                 height: 250, 
                 child: Image.asset( 
