@@ -120,7 +120,6 @@ showDialog(
     showDialog(
       context: context,
       builder: (_) => ErrorRecognitionDialog(
-        errorDetails: e.toString(),
         onRetry: () => enviarImagemParaAnalise(context),
       ),
     );

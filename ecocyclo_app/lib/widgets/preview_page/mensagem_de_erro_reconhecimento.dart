@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 
 class ErrorRecognitionDialog extends StatelessWidget {
-  final String errorDetails;
   final VoidCallback onRetry;
 
   const ErrorRecognitionDialog({
     super.key,
-    required this.errorDetails,
     required this.onRetry,
   });
 
@@ -53,23 +51,6 @@ class ErrorRecognitionDialog extends StatelessWidget {
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              "Detalhes: $errorDetails",
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w300,
-                color: Colors.grey,
-              ),
-            ),
-          ),
           const SizedBox(height: 24),
           Row(
             children: [
@@ -83,8 +64,8 @@ class ErrorRecognitionDialog extends StatelessWidget {
                   ),
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pop(context);
-                      onRetry();
+                      Navigator.pop(context); // Fecha o dialog
+                      Navigator.pop(context); // Volta para a câmera
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
@@ -95,7 +76,7 @@ class ErrorRecognitionDialog extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     child: const Text(
-                      "Tentar Novamente",
+                      "Tirar Nova Foto",
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
