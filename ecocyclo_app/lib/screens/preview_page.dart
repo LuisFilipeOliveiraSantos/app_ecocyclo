@@ -4,6 +4,7 @@ import '../widgets/agendar/botao_voltar_padrao.dart';
 import '../services/analyze_service.dart'; 
 import '../../theme/app_colors.dart';
 import '../../widgets/VisaoComp/Enviar_button.dart';
+import '../../widgets/preview_page/mensagem_de_erro_reconhecimento.dart';
 
 
 class PreviewPage extends StatelessWidget {
@@ -118,9 +119,8 @@ showDialog(
     Navigator.of(context, rootNavigator: true).pop();
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Erro"),
-        content: Text("Falha ao enviar imagem:\n$e"),
+      builder: (_) => ErrorRecognitionDialog(
+        onRetry: () => enviarImagemParaAnalise(context),
       ),
     );
   }
