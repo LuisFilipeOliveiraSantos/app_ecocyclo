@@ -71,20 +71,34 @@ class _AgendarDescartePageState extends State<AgendarDescartePage> {
 
                 const SizedBox(height: 12),
 
-                // Calendário
+                // CALENDÁRIO COM DATAS PASSADAS BLOQUEADAS
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: TableCalendar(
-                    firstDay: DateTime.utc(2020, 1, 1),
+                    firstDay: DateTime.now(), // Bloqueia datas passadas
                     lastDay: DateTime.utc(2030, 12, 31),
                     focusedDay: _focusedDay,
-                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+
+                    enabledDayPredicate: (day) {
+                      final hoje = DateTime.now();
+                      final hojeSemHora =
+                          DateTime(hoje.year, hoje.month, hoje.day);
+                      return !day.isBefore(hojeSemHora);
+                    },
+
+                    selectedDayPredicate: (day) =>
+                        isSameDay(_selectedDay, day),
+
                     onDaySelected: (selectedDay, focusedDay) {
                       setState(() {
                         _selectedDay = selectedDay;
                         _focusedDay = focusedDay;
+
+                        // ✅ Reseta o horário ao trocar a data
+                        _selectedTime = '12:00';
                       });
                     },
+
                     headerStyle: const HeaderStyle(
                       formatButtonVisible: false,
                       titleCentered: true,
@@ -93,13 +107,17 @@ class _AgendarDescartePageState extends State<AgendarDescartePage> {
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
-                      leftChevronIcon: Icon(Icons.chevron_left, color: Color(0xFF006F7F)),
-                      rightChevronIcon: Icon(Icons.chevron_right, color: Color(0xFF006F7F)),
+                      leftChevronIcon:
+                          Icon(Icons.chevron_left, color: Color(0xFF006F7F)),
+                      rightChevronIcon:
+                          Icon(Icons.chevron_right, color: Color(0xFF006F7F)),
                     ),
+
                     daysOfWeekStyle: const DaysOfWeekStyle(
                       weekdayStyle: TextStyle(color: Color(0xFF00A4A4)),
                       weekendStyle: TextStyle(color: Color(0xFF00A4A4)),
                     ),
+
                     calendarStyle: CalendarStyle(
                       todayDecoration: const BoxDecoration(
                         color: Color(0xFF00B894),
@@ -109,8 +127,10 @@ class _AgendarDescartePageState extends State<AgendarDescartePage> {
                         color: Color(0xFF0066A2),
                         shape: BoxShape.circle,
                       ),
-                      defaultTextStyle: const TextStyle(color: Colors.black87),
-                      weekendTextStyle: const TextStyle(color: Colors.black87),
+                      defaultTextStyle:
+                          const TextStyle(color: Colors.black87),
+                      weekendTextStyle:
+                          const TextStyle(color: Colors.black87),
                     ),
                   ),
                 ),
@@ -130,20 +150,47 @@ class _AgendarDescartePageState extends State<AgendarDescartePage> {
 
                 GestureDetector(
                   onTap: () async {
+                    final now = DateTime.now();
+
                     TimeOfDay? pickedTime = await showTimePicker(
                       context: context,
                       initialTime: TimeOfDay(
-                        hour: int.parse(_selectedTime.split(':')[0]),
-                        minute: int.parse(_selectedTime.split(':')[1]),
+                        hour: now.hour,
+                        minute: now.minute,
                       ),
                     );
 
                     if (pickedTime != null) {
+                      // Se a data for hoje, valida horário futuro
+                      if (_selectedDay != null &&
+                          isSameDay(_selectedDay, DateTime.now())) {
+                        final horarioSelecionado = DateTime(
+                          now.year,
+                          now.month,
+                          now.day,
+                          pickedTime.hour,
+                          pickedTime.minute,
+                        );
+
+                        if (horarioSelecionado.isBefore(now)) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content:
+                                  Text('Selecione um horário futuro.'),
+                              backgroundColor: Colors.red,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                          return; // 🔒 Bloqueia horário inválido
+                        }
+                      }
+
                       setState(() {
                         _selectedTime = pickedTime.format(context);
                       });
                     }
                   },
+
                   child: Container(
                     width: 120,
                     height: 48,
@@ -173,20 +220,27 @@ class _AgendarDescartePageState extends State<AgendarDescartePage> {
                     if (_selectedDay == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Por favor, selecione uma data antes de confirmar.'),
+                          content: Text(
+                              'Por favor, selecione uma data antes de confirmar.'),
+                          backgroundColor: Colors.red,
+                          behavior: SnackBarBehavior.floating,
                         ),
                       );
                       return;
                     }
 
-                    final empresa = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>? ?? {};
-                    print(empresa['empresa']['geminiItens']);
+                    final empresa = ModalRoute.of(context)!.settings.arguments
+                            as Map<String, dynamic>? ??
+                        {};
+
                     Navigator.pushNamed(
                       context,
                       '/confirmacao',
                       arguments: {
-                        'id_solicitada': empresa['empresa']['id_solicitada'],
-                        'geminiItens': empresa['empresa']['geminiItens'],
+                        'id_solicitada':
+                            empresa['empresa']['id_solicitada'],
+                        'geminiItens':
+                            empresa['empresa']['geminiItens'],
                         'empresa': empresa['empresa'],
                         'data': _selectedDay!.toString().split(' ')[0],
                         'hora': _selectedTime,
